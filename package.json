@@ -1,0 +1,20 @@
+{
+  "name": "discovery-swarm",
+  "version": "0.0.0",
+  "description": "A network swarm that uses discovery-channel to find peers",
+  "main": "index.js",
+  "dependencies": {
+    "discovery-channel": "^2.1.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafintosh/discovery-swarm.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/discovery-swarm/issues"
+  },
+  "homepage": "https://github.com/mafintosh/discovery-swarm"
+}
