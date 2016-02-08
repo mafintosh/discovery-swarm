@@ -2,7 +2,7 @@ var DC = require('discovery-channel')
 var net = require('net')
 try {
   var utp = require('utp-native')
-} catch {
+} catch (err) {
   var utp = null
 }
 var connections = require('connections')

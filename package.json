@@ -4,7 +4,9 @@
   "description": "A network swarm that uses discovery-channel to find peers",
   "main": "index.js",
   "dependencies": {
-    "discovery-channel": "^2.1.0"
+    "connections": "^1.4.0",
+    "discovery-channel": "^2.1.0",
+    "length-prefixed-message": "^3.0.3"
   },
   "devDependencies": {},
   "repository": {
@@ -16,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/mafintosh/discovery-swarm/issues"
   },
-  "homepage": "https://github.com/mafintosh/discovery-swarm"
+  "homepage": "https://github.com/mafintosh/discovery-swarm",
+  "optionalDependencies": {
+    "utp-native": "^1.1.0"
+  }
 }
