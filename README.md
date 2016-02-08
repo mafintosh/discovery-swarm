@@ -6,6 +6,8 @@ A network swarm that uses discovery-channel to find peers
 npm install discovery-swarm
 ```
 
+[![build status](http://img.shields.io/travis/mafintosh/discovery-swarm.svg?style=flat)](http://travis-ci.org/mafintosh/discovery-swarm)
+
 ## Usage
 
 ``` js
