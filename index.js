@@ -2,9 +2,7 @@ var DC = require('discovery-channel')
 var net = require('net')
 try {
   var utp = require('utp-native')
-} catch (err) {
-  var utp = null
-}
+} catch (err) {}
 var connections = require('connections')
 var lpmessage = require('length-prefixed-message')
 var crypto = require('crypto')
@@ -97,7 +95,7 @@ function Swarm (opts) {
       onconnection(this, peer)
     }
 
-    function onerror (err) {
+    function onerror () {
       this.destroy()
     }
 
