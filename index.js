@@ -177,6 +177,7 @@ Swarm.prototype.listen = function (port) {
 }
 
 Swarm.prototype.destroy = function () {
+  this._discovery.destroy()
   this.allConnections.destroy()
   this._connections.destroy()
   if (this._utpServer) this._utpServer.close()
