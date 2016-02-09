@@ -8,7 +8,7 @@ test('two swarms connect locally', function (t) {
   var swarms = []
 
   swarmIds.forEach(function (id) {
-    var s = Swarm()
+    var s = Swarm({dht: false})
     swarms.push(s)
 
     s.listen(10000 + id)
@@ -22,4 +22,27 @@ test('two swarms connect locally', function (t) {
       }
     })
   })
+})
+
+test('socket should get destroyed on a bad peer', function (t) {
+  var s = Swarm({dht: false})
+
+  s._discovery.emit('peer', 'beef', {host: 'localhost', port: 10003}) // should not connect
+
+  process.nextTick(function () {
+    t.equal(s.allConnections.sockets.length, 1, '1 socket')
+  })
+
+  s.on('connection', function (connection, type) {
+    t.false(connection, 'should never get here')
+    s.destroy()
+    t.end()
+  })
+
+  setTimeout(function () {
+    t.equal(s.allConnections.sockets.length, 0, '0 sockets')
+    s.destroy()
+    t.end()
+  }, 250)
+
 })
