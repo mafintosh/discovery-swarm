@@ -23,12 +23,7 @@ function Swarm (opts) {
 
   this._discovery = opts.discovery || DC(opts)
   this._discovery.on('peer', function (hash, peer) {
-    var peerId = peer.host + ':' + peer.port
-
-    if (self._peersSeen[peerId]) return
-    self._peersSeen[peerId] = true
-    self._peersQueued.push(peer)
-    connectPeer()
+    self.addPeer(peer)
   })
 
   this._peersQueued = []
@@ -66,6 +61,7 @@ function Swarm (opts) {
   })
 
   this.connections = this._connections.sockets
+  this._connectPeer = connectPeer
 
   function connectPeer () {
     if (self._destroyed) return
@@ -161,7 +157,11 @@ Swarm.prototype.banPeer = function (peer) {
 }
 
 Swarm.prototype.addPeer = function (peer) {
+  var peerId = peer.host + ':' + peer.port
+  if (this._peersSeen[peerId]) return
+  this._peersSeen[peerId] = true
   this._peersQueued.push(peer)
+  this._connectPeer()
 }
 
 Swarm.prototype.add = function (hash) {

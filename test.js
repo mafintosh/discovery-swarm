@@ -27,7 +27,7 @@ test('two swarms connect locally', function (t) {
 test('socket should get destroyed on a bad peer', function (t) {
   var s = Swarm({dht: false})
 
-  s._discovery.emit('peer', 'beef', {host: 'localhost', port: 10003}) // should not connect
+  s.addPeer({host: 'localhost', port: 10003}) // should not connect
 
   process.nextTick(function () {
     t.equal(s.allConnections.sockets.length, 1, '1 socket')
@@ -44,5 +44,4 @@ test('socket should get destroyed on a bad peer', function (t) {
     s.destroy()
     t.end()
   }, 250)
-
 })
