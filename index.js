@@ -107,7 +107,9 @@ function Swarm (opts) {
     connection.on('error', function () {
       connection.destroy()
     })
-
+    
+    // momentarily hijacks the transport to send the id so that all sockets can
+    // be associated with peer ids. only sends id then normal socket data flows
     lpmessage.write(connection, self.id)
     lpmessage.read(connection, function (remoteId) {
       var idHex = self.id.toString('hex')

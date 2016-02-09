@@ -1,6 +1,8 @@
 # discovery-swarm
 
-A network swarm that uses discovery-channel to find peers
+A network swarm that uses [discovery-channel](https://github.com/maxogden/discovery-channel) to find and connect to peers.
+
+This module implements peer connection state and builds on discovery-channel which implements peer discovery. This uses TCP sockets by default and has experimental support for UTP.
 
 ```
 npm install discovery-swarm
