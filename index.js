@@ -101,7 +101,7 @@ function Swarm (opts) {
 
     function ontimeout () {
       tcpSocket.destroy()
-      utpSocket.destroy()
+      if (utpSocket) utpSocket.destroy()
     }
   }
 
@@ -174,4 +174,11 @@ Swarm.prototype.listen = function (port) {
   this._port = port
   this._tcpServer.listen(port)
   if (this._utpServer) this._utpServer.listen(port)
+}
+
+Swarm.prototype.destroy = function () {
+  this.allConnections.destroy()
+  this._connections.destroy()
+  if (this._utpServer) this._utpServer.close()
+  this._tcpServer.close()
 }
