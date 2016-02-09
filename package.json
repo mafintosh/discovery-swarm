@@ -9,10 +9,11 @@
     "length-prefixed-message": "^3.0.3"
   },
   "devDependencies": {
-    "standard": "^6.0.4"
+    "standard": "^6.0.4",
+    "tape": "^4.4.0"
   },
   "scripts": {
-    "test": "standard"
+    "test": "standard && tape test.js"
   },
   "repository": {
     "type": "git",

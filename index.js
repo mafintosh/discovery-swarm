@@ -40,6 +40,7 @@ function Swarm (opts) {
   this._inboundConnections = {}
   this._banned = {}
   this._port = 0
+  this._destroyed = false
 
   this.maxConnections = opts.maxConnections || 100
   this._tcpServer.maxConnections = this.maxConnections
@@ -67,6 +68,7 @@ function Swarm (opts) {
   this.connections = this._connections.sockets
 
   function connectPeer () {
+    if (self._destroyed) return
     if (self.connections.length >= self.maxConnections) return
     if (self.allConnections.length >= self.maxConnections) return
 
@@ -178,6 +180,7 @@ Swarm.prototype.listen = function (port) {
 
 Swarm.prototype.destroy = function () {
   this._discovery.destroy()
+  this._destroyed = true
   this.allConnections.destroy()
   this._connections.destroy()
   if (this._utpServer) this._utpServer.close()
