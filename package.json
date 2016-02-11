@@ -6,7 +6,8 @@
   "dependencies": {
     "connections": "^1.4.0",
     "discovery-channel": "^2.1.0",
-    "length-prefixed-message": "^3.0.3"
+    "length-prefixed-message": "^3.0.3",
+    "pump": "^1.0.1"
   },
   "devDependencies": {
     "standard": "^6.0.4",

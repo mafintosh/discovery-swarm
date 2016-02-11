@@ -8,10 +8,21 @@ var lpmessage = require('length-prefixed-message')
 var crypto = require('crypto')
 var events = require('events')
 var util = require('util')
+var pump = require('pump')
 
 var CONNECT_TIMEOUT = 3000
 
 module.exports = Swarm
+
+function addHandshake (self, connection) {
+  // momentarily hijacks the transport to send the id so that all sockets can
+  // be associated with peer ids. only sends id then normal socket data flows
+  lpmessage.write(connection, self.id)
+  lpmessage.read(connection, function (remoteId) {
+    connection.remoteId = remoteId
+    connection.emit('handshake')
+  })
+}
 
 function Swarm (opts) {
   if (!(this instanceof Swarm)) return new Swarm(opts)
@@ -50,8 +61,10 @@ function Swarm (opts) {
   this.allConnections.on('close', connectPeer)
 
   this._connections.on('close', function (connection) {
-    delete self._outboundConnections[connection.remoteId]
-    delete self._inboundConnections[connection.remoteId]
+    if (connection.remoteId) {
+      delete self._outboundConnections[connection.remoteId.toString('hex')]
+      delete self._inboundConnections[connection.remoteId.toString('hex')]
+    }
     connectPeer()
   })
 
@@ -107,11 +120,17 @@ function Swarm (opts) {
     connection.on('error', function () {
       connection.destroy()
     })
-    
-    // momentarily hijacks the transport to send the id so that all sockets can
-    // be associated with peer ids. only sends id then normal socket data flows
-    lpmessage.write(connection, self.id)
-    lpmessage.read(connection, function (remoteId) {
+
+    if (opts.stream) {
+      var stream = opts.stream()
+      pump(connection, stream, connection)
+      connection = stream
+    } else {
+      addHandshake(self, connection)
+    }
+
+    connection.on('handshake', function () {
+      var remoteId = connection.remoteId
       var idHex = self.id.toString('hex')
       var remoteIdHex = remoteId.toString('hex')
 
