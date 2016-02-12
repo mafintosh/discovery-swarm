@@ -76,6 +76,13 @@ function Swarm (opts) {
   this.connections = this._connections.sockets
   this._connectPeer = connectPeer
 
+  if (this._utpServer) this._utpServer.on('error', onerror)
+  if (this._tcpServer) this._tcpServer.on('error', onerror)
+
+  function onerror (err) {
+    self.emit('error', err)
+  }
+
   function connectPeer () {
     if (self._destroyed) return
     if (self.connections.length >= self.maxConnections) return
