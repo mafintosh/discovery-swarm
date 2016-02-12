@@ -1,6 +1,6 @@
 {
   "name": "discovery-swarm",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A network swarm that uses discovery-channel to find peers",
   "main": "index.js",
   "dependencies": {
