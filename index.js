@@ -65,6 +65,9 @@ function Swarm (opts) {
       delete self._outboundConnections[connection.remoteId.toString('hex')]
       delete self._inboundConnections[connection.remoteId.toString('hex')]
     }
+    if (connection.peer) {
+      delete self._peersSeen[connection.peer.host + ':' + connection.peer.port]
+    }
     connectPeer()
   })
 
@@ -77,7 +80,11 @@ function Swarm (opts) {
   this._connectPeer = connectPeer
 
   if (this._utpServer) this._utpServer.on('error', onerror)
-  if (this._tcpServer) this._tcpServer.on('error', onerror)
+  if (this._tcpServer) this._tcpServer.on('error', onerror).on('listening', onlistening)
+
+  function onlistening () {
+    self.emit('listening')
+  }
 
   function onerror (err) {
     self.emit('error', err)
@@ -168,6 +175,10 @@ function Swarm (opts) {
 
 util.inherits(Swarm, events.EventEmitter)
 
+Swarm.prototype.address = function () {
+  return this._tcpServer ? this._tcpServer.address() : this._utpServer.address()
+}
+
 Swarm.prototype.__defineGetter__('peersQueued', function () {
   return this._peersQueued.length
 })
@@ -177,7 +188,7 @@ Swarm.prototype.__defineGetter__('peersConnected', function () {
 })
 
 Swarm.prototype.__defineGetter__('peersConnecting', function () {
-  return this.allConnections.length - this.connections.length
+  return this.allConnections.sockets.length - this.connections.length
 })
 
 Swarm.prototype.banPeer = function (peer) {
