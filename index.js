@@ -188,7 +188,7 @@ Swarm.prototype.__defineGetter__('peersConnected', function () {
 })
 
 Swarm.prototype.__defineGetter__('peersConnecting', function () {
-  return this.allConnections.sockets.length - this.connections.length
+  return this.allConnections.sockets.length
 })
 
 Swarm.prototype.banPeer = function (peer) {
