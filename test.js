@@ -1,36 +1,95 @@
 var test = require('tape')
-
-var Swarm = require('./')
+var swarm = require('./')
 
 test('two swarms connect locally', function (t) {
-  var pending = 2
-  var swarmIds = [1, 2]
+  var pending = 0
   var swarms = []
 
-  swarmIds.forEach(function (id) {
-    var s = Swarm({dht: false})
-    swarms.push(s)
+  create()
+  create()
 
-    s.listen(10000 + id)
-    s.add(Buffer('test-key-1'))
+  function create () {
+    var s = swarm({dht: false, utp: false})
+    swarms.push(s)
+    pending++
+    s.add('test')
 
     s.on('connection', function (connection, type) {
       t.ok(connection, 'got connection')
       if (--pending === 0) {
-        for (var i = 0; i < swarms.length; i++) swarms[i].destroy()
+        swarms.forEach(function (s) {
+          s.destroy()
+        })
         t.end()
       }
     })
+
+    return s
+  }
+})
+
+test('two swarms connect and exchange data', function (t) {
+  var a = swarm({dht: false, utp: false})
+  var b = swarm({dht: false, utp: false})
+
+  a.on('connection', function (connection) {
+    connection.write('hello')
+    connection.on('data', function (data) {
+      a.destroy()
+      b.destroy()
+      t.same(data, Buffer('hello'))
+      t.end()
+    })
   })
+
+  b.on('connection', function (connection) {
+    connection.pipe(connection)
+  })
+
+  a.add('test')
+  b.add('test')
+})
+
+test('connect many and send data', function (t) {
+  var runs = 10
+  var outer = 0
+  var swarms = []
+
+  for (var i = 0; i < runs; i++) create(i)
+
+  function create (i) {
+    var s = swarm({dht: false, utp: false})
+    swarms.push(s)
+
+    var seen = {}
+    var cnt = 0
+
+    s.on('connection', function (connection) {
+      connection.write('' + i)
+      connection.on('data', function (data) {
+        if (seen[data]) return
+        seen[data] = true
+        t.pass('swarm #' + i + ' received ' + data)
+        if (++cnt < runs - 1) return
+        if (++outer < runs) return
+        swarms.forEach(function (other) {
+          other.destroy()
+        })
+        t.end()
+      })
+    })
+
+    s.add('test')
+  }
 })
 
 test('socket should get destroyed on a bad peer', function (t) {
-  var s = Swarm({dht: false})
+  var s = swarm({dht: false, utp: false})
 
-  s.addPeer({host: 'localhost', port: 10003}) // should not connect
+  s.addPeer(10003) // should not connect
 
   process.nextTick(function () {
-    t.equal(s.allConnections.sockets.length, 1, '1 socket')
+    t.equal(s.totalConnections, 1, '1 connection')
   })
 
   s.on('connection', function (connection, type) {
@@ -40,7 +99,7 @@ test('socket should get destroyed on a bad peer', function (t) {
   })
 
   setTimeout(function () {
-    t.equal(s.allConnections.sockets.length, 0, '0 sockets')
+    t.equal(s.totalConnections, 0, '0 connections')
     s.destroy()
     t.end()
   }, 250)

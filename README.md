@@ -33,23 +33,19 @@ Create a new swarm
 
 #### `sw.add(key)`
 
-Add `key` (usually a name, hash or id, must be a **Buffer**) to the list of keys to use to discover and connect to peers. After adding will immediately search for peers advertising this key, and re-announce on a timer.
+Add `key` (usually a name, hash or id, must be a **Buffer** or a **string**) to the list of keys to use to discover and connect to peers. After adding will immediately search for peers advertising this key, and re-announce on a timer.
 
 #### `sw.remove(key)`
 
 Remove `key` from the list of keys
 
-#### `sw.peersQueued`
-
-Number of peers discovered but not connected to yet
-
-#### `sw.peersConnecting`
+#### `sw.connecting`
 
 Number of peers we are trying to connect to
 
-#### `sw.peersConnected`
+#### `sw.queued`
 
-Number of peers we are actively connected to. Same as `sw.connections.length`.
+Number of peers discovered but not connected to yet
 
 #### `sw.connections`
 
