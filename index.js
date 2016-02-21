@@ -65,6 +65,7 @@ util.inherits(Swarm, events.EventEmitter)
 Swarm.prototype.close =
 Swarm.prototype.destroy = function (onclose) {
   if (onclose) this.once('close', onclose)
+  if (this._listening && this._adding) return this.once('listening', this.destroy)
 
   this.destroyed = true
   if (this._discovery) this._discovery.destroy()
@@ -84,8 +85,10 @@ Swarm.prototype.destroy = function (onclose) {
     this._tcpConnections.destroy()
   }
 
-  if (this._tcp) this._tcp.close(onserverclose)
-  if (this._utp) this._utp.close(onserverclose)
+  if (this._listening) {
+    if (this._tcp) this._tcp.close(onserverclose)
+    if (this._utp) this._utp.close(onserverclose)
+  }
 
   function onserverclose () {
     if (--missing) self.emit('close')
