@@ -158,12 +158,12 @@ Swarm.prototype._ondiscover = function () {
   var names = this._adding
 
   if (this._options.dns !== false) {
-    if (!this._options.dns) this._options.dns = {}
+    if (!this._options.dns || this._options.dns === true) this._options.dns = {}
     this._options.dns.socket = this._utp
   }
 
   if (this._options.dht !== false) {
-    if (!this._options.dht) this._options.dht = {}
+    if (!this._options.dht || this._options.dht === true) this._options.dht = {}
     this._options.dht.socket = this._utp
   }
 
