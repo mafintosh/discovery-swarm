@@ -200,16 +200,20 @@ Swarm.prototype._kick = function () {
 
   var tcpSocket = null
   var utpSocket = null
+  var tcpClosed = true
+  var utpClosed = true
 
   if (this._tcp) {
+    tcpClosed = false
     tcpSocket = net.connect(next.port, next.host)
-    this._tcpConnections.add(tcpSocket)
     tcpSocket.on('connect', onconnect)
     tcpSocket.on('error', onerror)
     tcpSocket.on('close', onclose)
+    this._tcpConnections.add(tcpSocket)
   }
 
   if (this._utp) {
+    utpClosed = false
     utpSocket = this._utp.connect(next.port, next.host)
     utpSocket.on('connect', onconnect)
     utpSocket.on('error', onerror)
@@ -224,13 +228,18 @@ Swarm.prototype._kick = function () {
   }
 
   function onclose () {
-    clearTimeout(timeout)
-    if (utpSocket) utpSocket.removeListener('close', onclose)
-    if (tcpSocket) tcpSocket.removeListener('close', onclose)
-    self.totalConnections--
+    if (this === utpSocket) utpClosed = true
+    if (this === tcpSocket) tcpClosed = true
+    if (tcpClosed && utpClosed) {
+      clearTimeout(timeout)
+      if (utpSocket) utpSocket.removeListener('close', onclose)
+      if (tcpSocket) tcpSocket.removeListener('close', onclose)
+      self.totalConnections--
+    }
   }
 
   function onconnect () {
+    utpClosed = tcpClosed = true
     onclose() // decs totalConnections which _onconnection also incs
 
     var type = this === utpSocket ? 'utp' : 'tcp'
