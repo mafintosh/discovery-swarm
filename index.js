@@ -172,7 +172,6 @@ Swarm.prototype._ondiscover = function () {
   this._discovery.on('whoami', onwhoami)
   this._adding = null
 
-
   if (!names) return
   for (var i = 0; i < names.length; i++) this.add(names[i])
 
