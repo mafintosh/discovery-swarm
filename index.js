@@ -130,7 +130,7 @@ Swarm.prototype.remove = function (name) {
       }
     }
   } else {
-    this._discovery.remove(name, this._tcp.address().port)
+    this._discovery.leave(name, this._tcp.address().port)
   }
 }
 
