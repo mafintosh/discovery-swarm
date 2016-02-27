@@ -115,7 +115,7 @@ Swarm.prototype.add = function (name) {
   if (this._adding) {
     this._adding.push(name)
   } else {
-    this._discovery.add(name, this._utp ? 0 : this._tcp.address().port)
+    this._discovery.join(name, this._tcp.address().port, {impliedPort: !!this._utp})
   }
 }
 
@@ -130,7 +130,7 @@ Swarm.prototype.remove = function (name) {
       }
     }
   } else {
-    this._discovery.remove(name, this._utp ? 0 : this._tcp.address().port)
+    this._discovery.remove(name, this._tcp.address().port)
   }
 }
 
@@ -169,10 +169,16 @@ Swarm.prototype._ondiscover = function () {
 
   this._discovery = discovery(this._options)
   this._discovery.on('peer', onpeer)
+  this._discovery.on('whoami', onwhoami)
   this._adding = null
+
 
   if (!names) return
   for (var i = 0; i < names.length; i++) this.add(names[i])
+
+  function onwhoami (me) {
+    self._peersSeen[me.host + ':' + me.port] = PEER_BANNED
+  }
 
   function onpeer (channel, peer) {
     var id = peer.host + ':' + peer.port
