@@ -18,7 +18,7 @@ var swarm = require('discovery-swarm')
 var sw = swarm()
 
 sw.listen(1000)
-sw.add('ubuntu-14.04') // can be any id/name/hash
+sw.join('ubuntu-14.04') // can be any id/name/hash
 
 sw.on('connection', function (connection) {
   console.log('found + connected to peer')
@@ -31,13 +31,13 @@ sw.on('connection', function (connection) {
 
 Create a new swarm
 
-#### `sw.add(key)`
+#### `sw.join(key)`
 
-Add `key` (usually a name, hash or id, must be a **Buffer** or a **string**) to the list of keys to use to discover and connect to peers. After adding will immediately search for peers advertising this key, and re-announce on a timer.
+Join a channel specified by `key` (usually a name, hash or id, must be a **Buffer** or a **string**). After joining will immediately search for peers advertising this key, and re-announce on a timer.
 
-#### `sw.remove(key)`
+#### `sw.leave(key)`
 
-Remove `key` from the list of keys
+Leave the channel specified `key`
 
 #### `sw.connecting`
 

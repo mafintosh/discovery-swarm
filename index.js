@@ -107,7 +107,7 @@ Swarm.prototype.__defineGetter__('connected', function () {
   return this.connections.length
 })
 
-Swarm.prototype.add = function (name) {
+Swarm.prototype.join = function (name) {
   name = toBuffer(name)
 
   if (!this._listening && !this._adding) this._listenNext()
@@ -119,7 +119,7 @@ Swarm.prototype.add = function (name) {
   }
 }
 
-Swarm.prototype.remove = function (name) {
+Swarm.prototype.leave = function (name) {
   name = toBuffer(name)
 
   if (this._adding) {
