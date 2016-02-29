@@ -12,7 +12,7 @@ test('two swarms connect locally', function (t) {
     var s = swarm({dht: false, utp: false})
     swarms.push(s)
     pending++
-    s.add('test')
+    s.join('test')
 
     s.on('connection', function (connection, type) {
       t.ok(connection, 'got connection')
@@ -46,8 +46,8 @@ test('two swarms connect and exchange data', function (t) {
     connection.pipe(connection)
   })
 
-  a.add('test')
-  b.add('test')
+  a.join('test')
+  b.join('test')
 })
 
 test('connect many and send data', function (t) {
@@ -79,7 +79,7 @@ test('connect many and send data', function (t) {
       })
     })
 
-    s.add('test')
+    s.join('test')
   }
 })
 

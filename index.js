@@ -173,7 +173,7 @@ Swarm.prototype._ondiscover = function () {
   this._adding = null
 
   if (!names) return
-  for (var i = 0; i < names.length; i++) this.add(names[i])
+  for (var i = 0; i < names.length; i++) this.join(names[i])
 
   function onwhoami (me) {
     self._peersSeen[me.host + ':' + me.port] = PEER_BANNED
