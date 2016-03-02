@@ -20,7 +20,7 @@ var PEER_BANNED = 2
 
 var HANDSHAKE_TIMEOUT = 5000
 var CONNECTION_TIMEOUT = 3000
-var RECONNECT_WAIT = [1000, 5000, 15000]
+var RECONNECT_WAIT = [1000, 1000, 5000, 15000]
 // var DEFAULT_SIZE = 100 // TODO enable max connections
 
 module.exports = Swarm
@@ -241,6 +241,7 @@ Swarm.prototype._kick = function () {
       if (utpSocket) utpSocket.removeListener('close', onclose)
       if (tcpSocket) tcpSocket.removeListener('close', onclose)
       self.totalConnections--
+      self._requeue(next)
     }
   }
 
@@ -261,7 +262,7 @@ Swarm.prototype._requeue = function (peer) {
   if (this.destroyed) return
 
   var self = this
-  var wait = peer.retries >= RECONNECT_WAIT.length ? 0 : RECONNECT_WAIT[peer.retries]
+  var wait = peer.retries >= RECONNECT_WAIT.length ? 0 : RECONNECT_WAIT[peer.retries++]
   if (wait) setTimeoutUnref(requeue, wait)
   else this.emit('drop', peer)
 
