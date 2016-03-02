@@ -195,6 +195,7 @@ Swarm.prototype._kick = function () {
   if (this.destroyed) return
 
   var self = this
+  var connected = false
   var next = this._peersQueued.shift()
   while (next && this._peersSeen[next.id] === PEER_BANNED) {
     next = this._peersQueued.shift()
@@ -241,11 +242,12 @@ Swarm.prototype._kick = function () {
       if (utpSocket) utpSocket.removeListener('close', onclose)
       if (tcpSocket) tcpSocket.removeListener('close', onclose)
       self.totalConnections--
-      self._requeue(next)
+      if (!connected) self._requeue(next)
     }
   }
 
   function onconnect () {
+    connected = true
     utpClosed = tcpClosed = true
     onclose() // decs totalConnections which _onconnection also incs
 
