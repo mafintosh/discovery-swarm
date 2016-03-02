@@ -204,6 +204,7 @@ Swarm.prototype._kick = function () {
   if (!next) return
 
   this.totalConnections++
+  this.emit('connecting', next)
 
   var tcpSocket = null
   var utpSocket = null
