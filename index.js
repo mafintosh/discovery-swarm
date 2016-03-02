@@ -65,6 +65,7 @@ util.inherits(Swarm, events.EventEmitter)
 
 Swarm.prototype.close =
 Swarm.prototype.destroy = function (onclose) {
+  if (this.destroyed) return process.nextTick(onclose || noop)
   if (onclose) this.once('close', onclose)
   if (this._listening && this._adding) return this.once('listening', this.destroy)
 
@@ -92,7 +93,7 @@ Swarm.prototype.destroy = function (onclose) {
   }
 
   function onserverclose () {
-    if (--missing) self.emit('close')
+    if (!--missing) self.emit('close')
   }
 }
 
@@ -448,3 +449,5 @@ function setTimeoutUnref (fn, time) {
   if (timeout.unref) timeout.unref()
   return timeout
 }
+
+function noop () {}
