@@ -27,6 +27,7 @@ module.exports = Swarm
 
 function Swarm (opts) {
   if (!(this instanceof Swarm)) return new Swarm(opts)
+  if (!opts) opts = {}
   events.EventEmitter.call(this)
 
   var self = this
