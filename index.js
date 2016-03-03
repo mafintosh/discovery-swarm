@@ -287,6 +287,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   if (this._stream) {
     var wire = connection
     connection = this._stream()
+    if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
     pump(wire, connection, wire)
   } else {
@@ -319,7 +320,6 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   function onhandshake (remoteId) {
     if (!remoteId) remoteId = connection.remoteId
     clearTimeout(timeout)
-    if (connection.id) idHex = connection.id.toString('hex')
     remoteIdHex = remoteId.toString('hex')
     if (peer) peer.retries = 0
 
