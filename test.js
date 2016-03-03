@@ -104,3 +104,22 @@ test('socket should get destroyed on a bad peer', function (t) {
     t.end()
   }, 250)
 })
+
+test('swarm should not connect to self', function (t) {
+  var s = swarm({dht: false, utp: false})
+
+  s.on('connection', function (connection, type) {
+    t.false(connection, 'should never get here')
+    s.destroy()
+    t.end()
+  })
+
+  setTimeout(function () {
+    t.equal(s.totalConnections, 0, '0 connections')
+    s.destroy()
+    t.end()
+  }, 250)
+
+  s.join('test')
+})
+
