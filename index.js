@@ -286,7 +286,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
 
   if (this._stream) {
     var wire = connection
-    connection = this._stream(this.id)
+    connection = this._stream()
     connection.on('handshake', onhandshake)
     pump(wire, connection, wire)
   } else {
