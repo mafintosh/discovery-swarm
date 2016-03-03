@@ -319,6 +319,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   function onhandshake (remoteId) {
     if (!remoteId) remoteId = connection.remoteId
     clearTimeout(timeout)
+    if (connection.id) idHex = connection.id.toString('hex')
     remoteIdHex = remoteId.toString('hex')
     if (peer) peer.retries = 0
 
