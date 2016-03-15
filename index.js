@@ -110,7 +110,7 @@ Swarm.prototype.__defineGetter__('connected', function () {
 })
 
 Swarm.prototype.join = function (name) {
-  name = toBuffer(name)
+  name = toBuffer(name, 'hex')
 
   if (!this._listening && !this._adding) this._listenNext()
 
@@ -122,7 +122,7 @@ Swarm.prototype.join = function (name) {
 }
 
 Swarm.prototype.leave = function (name) {
-  name = toBuffer(name)
+  name = toBuffer(name, 'hex')
 
   if (this._adding) {
     for (var i = 0; i < this._adding.length; i++) {

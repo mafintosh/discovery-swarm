@@ -50,6 +50,28 @@ test('two swarms connect and exchange data', function (t) {
   b.join('test')
 })
 
+test('will upcast to a hex link', function (t) {
+  var a = swarm({dht: false, utp: false})
+  var b = swarm({dht: false, utp: false})
+
+  a.on('connection', function (connection) {
+    connection.write('hello')
+    connection.on('data', function (data) {
+      a.destroy()
+      b.destroy()
+      t.same(data, Buffer('hello'))
+      t.end()
+    })
+  })
+
+  b.on('connection', function (connection) {
+    connection.pipe(connection)
+  })
+
+  a.join(new Buffer('test', 'hex'))
+  b.join('test')
+})
+
 test('connect many and send data', function (t) {
   var runs = 10
   var outer = 0
@@ -122,4 +144,3 @@ test('swarm should not connect to self', function (t) {
 
   s.join('test')
 })
-
