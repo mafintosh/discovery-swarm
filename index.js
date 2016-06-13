@@ -148,7 +148,11 @@ Swarm.prototype.addPeer = function (peer) {
 Swarm.prototype.removePeer = function (peer) {
   peer = peerify(peer)
   this._peersSeen[peer.id] = PEER_BANNED
-  // delete this._peersSeen[peer.id]
+}
+
+Swarm.prototype._dropPeer = function (peer) {
+  delete this._peersSeen[peer.id]
+  this.emit('drop', peer)
 }
 
 Swarm.prototype.address = function () {
@@ -268,7 +272,7 @@ Swarm.prototype._requeue = function (peer) {
   var self = this
   var wait = peer.retries >= RECONNECT_WAIT.length ? 0 : RECONNECT_WAIT[peer.retries++]
   if (wait) setTimeoutUnref(requeue, wait)
-  else this.emit('drop', peer)
+  else this._dropPeer(peer)
 
   function requeue () {
     self._peersQueued.push(peer)
