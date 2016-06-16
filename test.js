@@ -86,7 +86,7 @@ test('connect many and send data', function (t) {
 test('socket should get destroyed on a bad peer', function (t) {
   var s = swarm({dht: false, utp: false})
 
-  s.addPeer(10003) // should not connect
+  s.addPeer('test', 10003) // should not connect
 
   process.nextTick(function () {
     t.equal(s.totalConnections, 1, '1 connection')

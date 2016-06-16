@@ -8,7 +8,7 @@ ids.forEach(function (id) {
   s.listen(10000 + id)
   s.add(Buffer('hello'))
 
-  s.on('connection', function (connection, type) {
-    console.log(id, 'connect', type)
+  s.on('connection', function (connection, info) {
+    console.log(id, 'connect', info)
   })
 })

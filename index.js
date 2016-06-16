@@ -136,8 +136,8 @@ Swarm.prototype.leave = function (name) {
   }
 }
 
-Swarm.prototype.addPeer = function (peer) {
-  peer = peerify(peer)
+Swarm.prototype.addPeer = function (name, peer) {
+  peer = peerify(peer, toBuffer(name))
   if (this._peersSeen[peer.id]) return
   this._peersSeen[peer.id] = PEER_SEEN
   this._peersQueued.push(peer)
@@ -145,8 +145,8 @@ Swarm.prototype.addPeer = function (peer) {
   this._kick()
 }
 
-Swarm.prototype.removePeer = function (peer) {
-  peer = peerify(peer)
+Swarm.prototype.removePeer = function (name, peer) {
+  peer = peerify(peer, toBuffer(name))
   this._peersSeen[peer.id] = PEER_BANNED
 }
 
@@ -189,7 +189,7 @@ Swarm.prototype._ondiscover = function () {
     var id = peer.host + ':' + peer.port
     if (self._peersSeen[id]) return
     self._peersSeen[id] = PEER_SEEN
-    self._peersQueued.push(peerify(peer))
+    self._peersQueued.push(peerify(peer, channel))
     self.emit('peer', peer)
     self._kick()
   }
@@ -285,12 +285,21 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   var idHex = this.id.toString('hex')
   var remoteIdHex
 
+  var info = {
+    type: type,
+    initiator: !!peer,
+    id: null,
+    host: peer ? peer.host : null,
+    port: peer ? peer.port : 0,
+    channel: peer ? peer.channel : null
+  }
+
   this.totalConnections++
   connection.on('close', onclose)
 
   if (this._stream) {
     var wire = connection
-    connection = this._stream()
+    connection = this._stream(info)
     if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
     pump(wire, connection, wire)
@@ -347,7 +356,8 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
 
     self._peersIds[remoteIdHex] = connection
     self.connections.push(connection)
-    self.emit('connection', connection, remoteId)
+    info.id = remoteId
+    self.emit('connection', connection, info)
   }
 }
 
@@ -441,11 +451,12 @@ function onerror () {
   this.destroy()
 }
 
-function peerify (peer) {
+function peerify (peer, channel) {
   if (typeof peer === 'number') peer = {port: peer}
   if (!peer.host) peer.host = '127.0.0.1'
   peer.id = peer.host + ':' + peer.port
   peer.retries = 0
+  peer.channel = channel
   return peer
 }
 

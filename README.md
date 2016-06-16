@@ -51,9 +51,20 @@ Number of peers discovered but not connected to yet
 
 List of active connections to other peers
 
-#### `sw.on('connection', connection)`
+#### `sw.on('connection', connection, info)`
 
-Emitted when you connect to another peer
+Emitted when you connect to another peer. Info is an object that contains info about the connection
+
+``` js
+{
+  type: 'tcp', // the type, tcp or utp
+  initiator: true, // wheather we initiated the connection or someone else did
+  channel: Buffer('...'), // the channel this connetion was initiated on. only set if initiator === true
+  host: '127.0.0.1', // the remote address of the peer.
+  port: 8080, // the remote port of the peer.
+  id: Buffer('...') // the remote peer's peer-id.
+}
+```
 
 #### `sw.listen(port)`
 
