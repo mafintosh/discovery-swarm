@@ -55,7 +55,7 @@ function Swarm (opts) {
   if (this._options.discovery !== false) this.on('listening', this._ondiscover)
 
   function onconnection (connection) {
-    var type = this === this._tcp ? 'tcp' : 'utp'
+    var type = this === self._tcp ? 'tcp' : 'utp'
     connection.on('error', onerror)
     self._onconnection(connection, type, null)
   }
