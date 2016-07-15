@@ -117,7 +117,7 @@ Swarm.prototype.join = function (name) {
   if (this._adding) {
     this._adding.push(name)
   } else {
-    this._discovery.join(name, this._tcp.address().port, {impliedPort: !!this._utp})
+    this._discovery.join(name, this.address().port, {impliedPort: !!this._utp})
   }
 }
 
@@ -132,7 +132,7 @@ Swarm.prototype.leave = function (name) {
       }
     }
   } else {
-    this._discovery.leave(name, this._tcp.address().port)
+    this._discovery.leave(name, this.address().port)
   }
 }
 
