@@ -27,9 +27,19 @@ sw.on('connection', function (connection) {
 
 ## API
 
-#### `var sw = swarm()`
+#### `var sw = swarm(opts)`
 
-Create a new swarm
+Create a new swarm. Options include:
+
+```js
+{
+  id: crypto.randomBytes(32), // peer-id for user
+  stream: stream // stream to replicate across peers
+  utp: true, // use utp for discovery
+  tcp: true, // use tcp for discovery
+  maxConnections: 0 // max number of connections. 
+}
+```
 
 #### `sw.join(key)`
 
