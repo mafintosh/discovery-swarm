@@ -40,6 +40,7 @@ Create a new swarm. Options include:
   maxConnections: 0 // max number of connections. 
 }
 ```
+Note: for full list of `opts` please take a look at [discovery-channel](https://github.com/maxogden/discovery-channel)
 
 #### `sw.join(key)`
 
