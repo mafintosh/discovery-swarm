@@ -35,10 +35,12 @@ test('two swarms connect and exchange data', function (t) {
   a.on('connection', function (connection) {
     connection.write('hello')
     connection.on('data', function (data) {
-      a.destroy()
-      b.destroy()
       t.same(data, Buffer('hello'))
-      t.end()
+      a.destroy(function () {
+        t.same(a.connections.length, 0, 'connections should go to 0')
+        b.destroy()
+        t.end()
+      })
     })
   })
 
