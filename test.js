@@ -28,7 +28,7 @@ test('two swarms connect locally', function (t) {
   }
 })
 
-test('two swarms connect and exchange data', function (t) {
+test.only('two swarms connect and exchange data', function (t) {
   var a = swarm({dht: false, utp: false})
   var b = swarm({dht: false, utp: false})
 
@@ -36,9 +36,10 @@ test('two swarms connect and exchange data', function (t) {
     connection.write('hello')
     connection.on('data', function (data) {
       t.same(data, Buffer('hello'))
-      a.destroy(function () {
+      a.destroy()
+      b.destroy()
+      a._tcpConnections.once('close', function () {
         t.same(a.connections.length, 0, 'connections should go to 0')
-        b.destroy()
         t.end()
       })
     })
