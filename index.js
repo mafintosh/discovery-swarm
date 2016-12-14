@@ -121,7 +121,7 @@ Swarm.prototype.join = function (name, opts) {
   } else {
     var port
     if (opts.announce) port = this.address().port
-    this._discovery.join(name, port, {impliedPort: !!this._utp})
+    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp})
   }
 }
 
