@@ -43,9 +43,11 @@ Create a new swarm. Options include:
 
 For full list of `opts` take a look at [discovery-channel](https://github.com/maxogden/discovery-channel)
 
-#### `sw.join(key)`
+#### `sw.join(key, [opts])`
 
 Join a channel specified by `key` (usually a name, hash or id, must be a **Buffer** or a **string**). After joining will immediately search for peers advertising this key, and re-announce on a timer.
+
+If you pass `opts.announce` as a falsy value you don't announce your port (e.g. you will be in discover-only mode)
 
 #### `sw.leave(key)`
 
