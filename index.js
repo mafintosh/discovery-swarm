@@ -109,15 +109,19 @@ Swarm.prototype.__defineGetter__('connected', function () {
   return this.connections.length
 })
 
-Swarm.prototype.join = function (name) {
+Swarm.prototype.join = function (name, opts) {
   name = toBuffer(name)
+  if (!opts) opts = {}
+  if (typeof opts.announce === 'undefined') opts.announce = true
 
   if (!this._listening && !this._adding) this._listenNext()
 
   if (this._adding) {
     this._adding.push(name)
   } else {
-    this._discovery.join(name, this.address().port, {impliedPort: !!this._utp})
+    var port
+    if (opts.announce) port = this.address().port
+    this._discovery.join(name, port, {impliedPort: !!this._utp})
   }
 }
 
@@ -172,7 +176,6 @@ Swarm.prototype._ondiscover = function () {
     if (!this._options.dht || this._options.dht === true) this._options.dht = {}
     this._options.dht.socket = this._utp
   }
-
   this._discovery = discovery(this._options)
   this._discovery.on('peer', onpeer)
   this._discovery.on('whoami', onwhoami)
