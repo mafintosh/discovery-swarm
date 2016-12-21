@@ -8,6 +8,7 @@ var toBuffer = require('to-buffer')
 var crypto = require('crypto')
 var lpmessage = require('length-prefixed-message')
 var connections = require('connections')
+var debug = require('debug')('discovery-swarm')
 
 try {
   var utp = require('utp-native')
@@ -56,6 +57,9 @@ function Swarm (opts) {
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
+    var ip = connection.remoteAddress || connection.address()
+    var port = this.address().port
+    debug(`inbound connection type:${type} ip:${ip}:${port}`)
     connection.on('error', onerror)
     self._onconnection(connection, type, null)
   }
@@ -213,6 +217,7 @@ Swarm.prototype._kick = function () {
 
   this.totalConnections++
   this.emit('connecting', next)
+  debug(`connecting ${next.id} retries:${next.retries} tcp:${!!this._tcp} utp:${!!this._tcp}`)
 
   var tcpSocket = null
   var utpSocket = null
@@ -239,6 +244,7 @@ Swarm.prototype._kick = function () {
   var timeout = setTimeoutUnref(ontimeout, CONNECTION_TIMEOUT)
 
   function ontimeout () {
+    debug(`timeout ${next.id}`)
     if (utpSocket) utpSocket.destroy()
     if (tcpSocket) tcpSocket.destroy()
   }
@@ -247,6 +253,7 @@ Swarm.prototype._kick = function () {
     if (this === utpSocket) utpClosed = true
     if (this === tcpSocket) tcpClosed = true
     if (tcpClosed && utpClosed) {
+      debug(`onclose utp+tcp ${next.id} requeue:${!connected}`)
       clearTimeout(timeout)
       if (utpSocket) utpSocket.removeListener('close', onclose)
       if (tcpSocket) tcpSocket.removeListener('close', onclose)
@@ -261,6 +268,8 @@ Swarm.prototype._kick = function () {
     onclose() // decs totalConnections which _onconnection also incs
 
     var type = this === utpSocket ? 'utp' : 'tcp'
+
+    debug(`onconnect ${next.id} type:${type}`)
 
     if (type === 'utp' && tcpSocket) tcpSocket.destroy()
     if (type === 'tcp' && utpSocket) utpSocket.destroy()
