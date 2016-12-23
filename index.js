@@ -57,7 +57,7 @@ function Swarm (opts) {
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
-    var ip = connection.remoteAddress || connection.address()
+    var ip = connection.remoteAddress || connection.address().address
     var port = this.address().port
     debug(`inbound connection type:${type} ip:${ip}:${port}`)
     connection.on('error', onerror)
