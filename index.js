@@ -357,6 +357,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     var old = self._peersIds[remoteIdHex]
 
     if (old) {
+      debug('duplicate connections detected in handshake, dropping one')
       if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex)) {
         connection.destroy()
         return
