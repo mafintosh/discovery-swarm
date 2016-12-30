@@ -57,9 +57,9 @@ function Swarm (opts) {
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
-    var ip = connection.remoteAddress || connection.address()
+    var ip = connection.remoteAddress || connection.address().address
     var port = this.address().port
-    debug(`inbound connection type:${type} ip:${ip}:${port}`)
+    debug('inbound connection type=%s ip=%s:%d', type, ip, port)
     connection.on('error', onerror)
     self._onconnection(connection, type, null)
   }
@@ -217,7 +217,7 @@ Swarm.prototype._kick = function () {
 
   this.totalConnections++
   this.emit('connecting', next)
-  debug(`connecting ${next.id} retries:${next.retries} tcp:${!!this._tcp} utp:${!!this._tcp}`)
+  debug('connecting %s retries=%d', next.id, next.retries)
 
   var tcpSocket = null
   var utpSocket = null
@@ -244,7 +244,7 @@ Swarm.prototype._kick = function () {
   var timeout = setTimeoutUnref(ontimeout, CONNECTION_TIMEOUT)
 
   function ontimeout () {
-    debug(`timeout ${next.id}`)
+    debug('timeout %s', next.id)
     if (utpSocket) utpSocket.destroy()
     if (tcpSocket) tcpSocket.destroy()
   }
@@ -253,7 +253,7 @@ Swarm.prototype._kick = function () {
     if (this === utpSocket) utpClosed = true
     if (this === tcpSocket) tcpClosed = true
     if (tcpClosed && utpClosed) {
-      debug(`onclose utp+tcp ${next.id} requeue:${!connected}`)
+      debug('onclose utp+tcp %s will-requeue=%d', next.id, !connected)
       clearTimeout(timeout)
       if (utpSocket) utpSocket.removeListener('close', onclose)
       if (tcpSocket) tcpSocket.removeListener('close', onclose)
@@ -269,7 +269,7 @@ Swarm.prototype._kick = function () {
 
     var type = this === utpSocket ? 'utp' : 'tcp'
 
-    debug(`onconnect ${next.id} type:${type}`)
+    debug('onconnect %s type=%s', next.id, type)
 
     if (type === 'utp' && tcpSocket) tcpSocket.destroy()
     if (type === 'tcp' && utpSocket) utpSocket.destroy()
@@ -357,6 +357,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     var old = self._peersIds[remoteIdHex]
 
     if (old) {
+      debug('duplicate connections detected in handshake, dropping one')
       if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex)) {
         connection.destroy()
         return
