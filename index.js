@@ -42,6 +42,7 @@ function Swarm (opts) {
 
   this._stream = opts.stream
   this._options = opts || {}
+  this._whitelist = opts.whitelist || []
   this._discovery = null
   this._tcp = opts.tcp === false ? null : net.createServer().on('connection', onconnection)
   this._utp = opts.utp === false || !utp ? null : utp().on('connection', onconnection)
@@ -147,6 +148,7 @@ Swarm.prototype.leave = function (name) {
 Swarm.prototype.addPeer = function (name, peer) {
   peer = peerify(peer, toBuffer(name))
   if (this._peersSeen[peer.id]) return
+  if (this._whitelist.length && this._whitelist.indexOf(peer.host) === -1) return
   this._peersSeen[peer.id] = PEER_SEEN
   this._peersQueued.push(peer)
   this.emit('peer', peer)
@@ -194,6 +196,7 @@ Swarm.prototype._ondiscover = function () {
 
   function onpeer (channel, peer) {
     var id = peer.host + ':' + peer.port
+    if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) return
     if (self._peersSeen[id]) return
     self._peersSeen[id] = PEER_SEEN
     self._peersQueued.push(peerify(peer, channel))

@@ -123,3 +123,20 @@ test('swarm should not connect to self', function (t) {
   s.join('test')
 })
 
+test('swarm ignore whitelist', function (t) {
+  var s = swarm({dht: false, utp: false, whitelist: ['9.9.9.9']})
+  var emitted = false
+
+  s.on('peer', function () {
+    emitted = true
+  })
+
+  s.addPeer('127.0.0.1', 9999) // should not connect
+
+  setTimeout(function () {
+    t.equal(emitted, false)
+    s.destroy()
+    t.end()
+  }, 250)
+})
+

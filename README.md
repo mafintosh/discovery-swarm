@@ -37,7 +37,8 @@ Create a new swarm. Options include:
   stream: stream // stream to replicate across peers
   utp: true, // use utp for discovery
   tcp: true, // use tcp for discovery
-  maxConnections: 0 // max number of connections. 
+  maxConnections: 0, // max number of connections.
+  whitelist: [] // array of ip addresses to restrict connections to
 }
 ```
 
