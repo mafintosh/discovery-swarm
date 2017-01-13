@@ -1,14 +1,20 @@
 var swarm = require('./')
 
-var ids = [1, 2, 3, 4, 5]
+var a = swarm({dht: false, utp: false})
+var b = swarm({dht: false, utp: false})
 
-ids.forEach(function (id) {
-  var s = swarm({maxConnections: 2})
-
-  s.listen(10000 + id)
-  s.add(Buffer('hello'))
-
-  s.on('connection', function (connection, info) {
-    console.log(id, 'connect', info)
+a.on('connection', function (connection) {
+  connection.write('Hello, World!')
+  connection.on('data', function (data) {
+    console.log(data.toString());
+    a.destroy()
+    b.destroy()
   })
 })
+
+b.on('connection', function (connection) {
+  connection.pipe(connection)
+})
+
+a.join('test')
+b.join('test')
