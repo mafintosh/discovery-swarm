@@ -116,7 +116,7 @@ Swarm.prototype.__defineGetter__('connected', function () {
   return this.activeConnections
 })
 
-Swarm.prototype.join = function (name, opts, cb) {
+Swarm.prototype.join = function (name, opts) {
   name = toBuffer(name)
   if (!opts) opts = {}
   if (typeof opts.announce === 'undefined') opts.announce = true
@@ -128,7 +128,7 @@ Swarm.prototype.join = function (name, opts, cb) {
   } else {
     var port
     if (opts.announce) port = this.address().port
-    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp}, cb)
+    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp})
   }
 }
 
