@@ -326,7 +326,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     })
     pump(wire, connection, sentData, wire)
   } else {
-    // TODO: count activeConnections for writing peers
+    // TODO: count activeConnections for writing peers when data is successfully sent
     handshake(connection, this.id, onhandshake)
   }
 
