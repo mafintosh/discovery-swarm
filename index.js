@@ -386,6 +386,12 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       if (!connection._isActive) self.activeConnections++
       connection._isActive = true
     })
+    if (!this._stream) {
+      // TODO: add connection count immediately for now.
+      // Ideally only set with data is sent.
+      if (!connection._isActive) self.activeConnections++
+      connection._isActive = true
+    }
     self.emit('connection', connection, info)
   }
 }
