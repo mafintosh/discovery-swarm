@@ -114,7 +114,8 @@ Swarm.prototype.__defineGetter__('connected', function () {
   return this.connections.length
 })
 
-Swarm.prototype.join = function (name, opts) {
+Swarm.prototype.join = function (name, opts, cb) {
+  if (typeof opts === 'function') return this.join(name, {}, opts)
   name = toBuffer(name)
   if (!opts) opts = {}
   if (typeof opts.announce === 'undefined') opts.announce = true
@@ -122,11 +123,11 @@ Swarm.prototype.join = function (name, opts) {
   if (!this._listening && !this._adding) this._listenNext()
 
   if (this._adding) {
-    this._adding.push(name)
+    this._adding.push({name: name, opts: opts, cb: cb})
   } else {
     var port
     if (opts.announce) port = this.address().port
-    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp})
+    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp}, cb)
   }
 }
 
@@ -135,7 +136,7 @@ Swarm.prototype.leave = function (name) {
 
   if (this._adding) {
     for (var i = 0; i < this._adding.length; i++) {
-      if (equals(this._adding[i], name)) {
+      if (equals(this._adding[i].name, name)) {
         this._adding.splice(i, 1)
         return
       }
@@ -171,7 +172,7 @@ Swarm.prototype.address = function () {
 
 Swarm.prototype._ondiscover = function () {
   var self = this
-  var names = this._adding
+  var joins = this._adding
 
   if (this._options.dns !== false) {
     if (!this._options.dns || this._options.dns === true) this._options.dns = {}
@@ -187,8 +188,8 @@ Swarm.prototype._ondiscover = function () {
   this._discovery.on('whoami', onwhoami)
   this._adding = null
 
-  if (!names) return
-  for (var i = 0; i < names.length; i++) this.join(names[i])
+  if (!joins) return
+  for (var i = 0; i < joins.length; i++) this.join(joins[i].name, joins[i].opts, joins[i].cb)
 
   function onwhoami (me) {
     self._peersSeen[me.host + ':' + me.port] = PEER_BANNED

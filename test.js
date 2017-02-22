@@ -50,6 +50,27 @@ test('two swarms connect and exchange data', function (t) {
   b.join('test')
 })
 
+test('two swarms connect and callback', function (t) {
+  var a = swarm({dht: false, utp: false})
+  var b = swarm({dht: false, utp: false})
+  var pending = 2
+
+  a.join('test', function () {
+    t.pass('connected')
+    if (!--pending) done()
+  })
+  b.join('test', function () {
+    t.pass('connected')
+    if (!--pending) done()
+  })
+
+  function done () {
+    a.destroy()
+    b.destroy()
+    t.end()
+  }
+})
+
 test('connect many and send data', function (t) {
   var runs = 10
   var outer = 0
