@@ -1,5 +1,6 @@
 var discovery = require('discovery-channel')
 var pump = require('pump')
+var through = require('through2')
 var events = require('events')
 var util = require('util')
 var net = require('net')
@@ -35,6 +36,7 @@ function Swarm (opts) {
 
   this.maxConnections = opts.maxConnections || 0
   this.totalConnections = 0
+  this.activeConnections = 0
 
   this.connections = []
   this.id = opts.id || crypto.randomBytes(32)
@@ -111,7 +113,7 @@ Swarm.prototype.__defineGetter__('connecting', function () {
 })
 
 Swarm.prototype.__defineGetter__('connected', function () {
-  return this.connections.length
+  return this.activeConnections
 })
 
 Swarm.prototype.join = function (name, opts, cb) {
@@ -318,8 +320,14 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     connection = this._stream(info)
     if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
-    pump(wire, connection, wire)
+    var sentData = through(function (obj, enc, next) {
+      if (!connection._isActive) self.activeConnections++
+      connection._isActive = true
+      next(null, obj)
+    })
+    pump(wire, connection, sentData, wire)
   } else {
+    // TODO: count activeConnections for writing peers when data is successfully sent
     handshake(connection, this.id, onhandshake)
   }
 
@@ -333,6 +341,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   function onclose () {
     clearTimeout(timeout)
     self.totalConnections--
+    if (connection._isActive) self.activeConnections--
 
     var i = self.connections.indexOf(connection)
     if (i > -1) {
@@ -374,6 +383,16 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     self._peersIds[remoteIdHex] = connection
     self.connections.push(connection)
     info.id = remoteId
+    connection.once('data', function () {
+      if (!connection._isActive) self.activeConnections++
+      connection._isActive = true
+    })
+    if (!this._stream) {
+      // TODO: add connection count immediately for now.
+      // Ideally only set with data is sent.
+      if (!connection._isActive) self.activeConnections++
+      connection._isActive = true
+    }
     self.emit('connection', connection, info)
   }
 }

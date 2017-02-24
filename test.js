@@ -35,6 +35,8 @@ test('two swarms connect and exchange data', function (t) {
   a.on('connection', function (connection) {
     connection.write('hello')
     connection.on('data', function (data) {
+      t.same(a.activeConnections, 1, 'one active connection after data')
+      t.same(b.activeConnections, 1, 'one active connection after data')
       a.destroy()
       b.destroy()
       t.same(data, Buffer('hello'))
