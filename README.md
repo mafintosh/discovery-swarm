@@ -64,9 +64,9 @@ Number of peers we are trying to connect to
 
 Number of peers discovered but not connected to yet
 
-#### `sw.activeConnections`
+#### `sw.connected`
 
-List of active connections to other peers. Counted only after data has been transmitted.
+List of connections to other peers.
 
 #### `sw.on('connection', connection, info)`
 
