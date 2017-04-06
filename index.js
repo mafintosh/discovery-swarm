@@ -248,7 +248,7 @@ Swarm.prototype._kick = function () {
   var timeout = setTimeoutUnref(ontimeout, CONNECTION_TIMEOUT)
 
   function ondeferredconnect () {
-    if (!self._tcp || tcpClosed) return onconnect()
+    if (!self._tcp || tcpClosed) return onconnect.call(utpSocket)
     setTimeout(function () {
       if (!utpClosed && !connected) onconnect.call(utpSocket)
     }, 100)
