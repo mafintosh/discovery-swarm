@@ -240,12 +240,19 @@ Swarm.prototype._kick = function () {
   if (this._utp) {
     utpClosed = false
     utpSocket = this._utp.connect(next.port, next.host)
-    utpSocket.on('connect', onconnect)
+    utpSocket.on('connect', ondeferredconnect)
     utpSocket.on('error', onerror)
     utpSocket.on('close', onclose)
   }
 
   var timeout = setTimeoutUnref(ontimeout, CONNECTION_TIMEOUT)
+
+  function ondeferredconnect () {
+    if (!self._tcp || tcpClosed) return onconnect()
+    setTimeout(function () {
+      if (!utpClosed && !connected) onconnect.call(utpSocket)
+    }, 100)
+  }
 
   function ontimeout () {
     debug('timeout %s', next.id)
