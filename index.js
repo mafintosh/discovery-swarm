@@ -376,9 +376,11 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
 
     if (old) {
       debug('duplicate connections detected in handshake, dropping one')
-      if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex) || (type === 'utp' && oldType === 'tcp')) {
-        connection.destroy()
-        return
+      if (!(oldType === 'utp' && type === 'tcp')) {
+        if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex) || (type === 'utp' && oldType === 'tcp')) {
+          connection.destroy()
+          return
+        }
       }
       delete self._peersIds[remoteIdHex] // delete to not trigger re-queue
       old.destroy()
