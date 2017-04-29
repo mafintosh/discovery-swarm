@@ -248,10 +248,10 @@ Swarm.prototype._kick = function () {
   var timeout = setTimeoutUnref(ontimeout, CONNECTION_TIMEOUT)
 
   function ondeferredconnect () {
-    if (!self._tcp || tcpClosed) return onconnect.call(utpSocket)
+    if (!self._tcp || tcpClosed) return onconnect()
     setTimeout(function () {
       if (!utpClosed && !connected) onconnect.call(utpSocket)
-    }, 100)
+    }, 500)
   }
 
   function ontimeout () {
@@ -317,6 +317,11 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     channel: peer ? peer.channel : null
   }
 
+  var wrap = {
+    info: info,
+    connection: connection
+  }
+
   this.totalConnections++
   connection.on('close', onclose)
 
@@ -347,7 +352,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       if (last !== connection) self.connections[i] = last
     }
 
-    if (remoteIdHex && self._peersIds[remoteIdHex] === connection) {
+    if (remoteIdHex && self._peersIds[remoteIdHex] && self._peersIds[remoteIdHex].connection === connection) {
       delete self._peersIds[remoteIdHex]
       if (peer) self._requeue(peer)
     }
@@ -365,11 +370,13 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       return
     }
 
-    var old = self._peersIds[remoteIdHex]
+    var oldWrap = self._peersIds[remoteIdHex]
+    var old = oldWrap && oldWrap.connection
+    var oldType = oldWrap && oldWrap.info.type
 
     if (old) {
       debug('duplicate connections detected in handshake, dropping one')
-      if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex)) {
+      if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex) || (type === 'utp' && oldType === 'tcp')) {
         connection.destroy()
         return
       }
@@ -378,7 +385,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       old = null // help gc
     }
 
-    self._peersIds[remoteIdHex] = connection
+    self._peersIds[remoteIdHex] = wrap
     self.connections.push(connection)
     info.id = remoteId
     self.emit('connection', connection, info)
