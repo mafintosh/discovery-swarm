@@ -317,11 +317,6 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     channel: peer ? peer.channel : null
   }
 
-  var wrap = {
-    info: info,
-    connection: connection
-  }
-
   this.totalConnections++
   connection.on('close', onclose)
 
@@ -333,6 +328,11 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     pump(wire, connection, wire)
   } else {
     handshake(connection, this.id, onhandshake)
+  }
+
+  var wrap = {
+    info: info,
+    connection: connection
   }
 
   var timeout = setTimeoutUnref(ontimeout, HANDSHAKE_TIMEOUT)
