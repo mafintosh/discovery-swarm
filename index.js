@@ -312,8 +312,8 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     type: type,
     initiator: !!peer,
     id: null,
-    host: peer ? peer.host : null,
-    port: peer ? peer.port : 0,
+    host: peer ? peer.host : connection.address().address,
+    port: peer ? peer.port : connection.address().port,
     channel: peer ? peer.channel : null
   }
 
