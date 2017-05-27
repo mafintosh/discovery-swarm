@@ -197,9 +197,10 @@ Swarm.prototype._ondiscover = function () {
 
   function onpeer (channel, peer) {
     var id = peer.host + ':' + peer.port
+    var longId = id + '@' + (channel ? channel.toString('hex') : '')
     if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) return
-    if (self._peersSeen[id]) return
-    self._peersSeen[id] = PEER_SEEN
+    if (self._peersSeen[id] || self._peersSeen[longId]) return
+    self._peersSeen[longId] = PEER_SEEN
     self._peersQueued.push(peerify(peer, channel))
     self.emit('peer', peer)
     self._kick()
@@ -362,6 +363,13 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     if (!remoteId) remoteId = connection.remoteId
     clearTimeout(timeout)
     remoteIdHex = remoteId.toString('hex')
+
+    if (Buffer.isBuffer(connection.discoveryKey) || Buffer.isBuffer(connection.channel)) {
+      var suffix = '@' + (connection.discoveryKey || connection.channel).toString('hex')
+      remoteIdHex += suffix
+      idHex += suffix
+    }
+
     if (peer) peer.retries = 0
 
     if (idHex === remoteIdHex) {
@@ -487,7 +495,7 @@ function onerror () {
 function peerify (peer, channel) {
   if (typeof peer === 'number') peer = {port: peer}
   if (!peer.host) peer.host = '127.0.0.1'
-  peer.id = peer.host + ':' + peer.port
+  peer.id = peer.host + ':' + peer.port + '@' + (channel ? channel.toString('hex') : '')
   peer.retries = 0
   peer.channel = channel
   return peer
