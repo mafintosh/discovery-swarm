@@ -34,7 +34,8 @@ Create a new swarm. Options include:
 ```js
 {
   id: crypto.randomBytes(32), // peer-id for user
-  stream: stream // stream to replicate across peers
+  stream: stream, // stream to replicate across peers
+  connect: fn, // connect local and remote streams yourself
   utp: true, // use utp for discovery
   tcp: true, // use tcp for discovery
   maxConnections: 0, // max number of connections.
