@@ -326,7 +326,8 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     connection = this._stream(info)
     if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
-    pump(wire, connection, wire)
+    if (this._options.connect) this._options.connect(connection, wire)
+    else pump(wire, connection, wire)
   } else {
     handshake(connection, this.id, onhandshake)
   }
