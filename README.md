@@ -76,7 +76,7 @@ Emitted when you connect to another peer. Info is an object that contains info a
 ``` js
 {
   type: 'tcp', // the type, tcp or utp
-  initiator: true, // wheather we initiated the connection or someone else did
+  initiator: true, // whether we initiated the connection or someone else did
   channel: Buffer('...'), // the channel this connetion was initiated on. only set if initiator === true
   host: '127.0.0.1', // the remote address of the peer.
   port: 8080, // the remote port of the peer.
