@@ -414,6 +414,7 @@ Swarm.prototype._listenNext = function () {
 }
 
 Swarm.prototype.listen = function (port, onlistening) {
+  if (this.destroyed) return
   if (this._tcp && this._utp) return this._listenBoth(port, onlistening)
   if (!port) port = 0
   if (onlistening) this.once('listening', onlistening)
