@@ -1,6 +1,14 @@
 var test = require('tape')
 var swarm = require('./')
 
+test('swarm destroys immediately', function (t) {
+  var s = swarm({dht: false, utp: false})
+  s.destroy(function () {
+    t.ok(true, 'destroyed ok')
+    t.end()
+  })
+})
+
 test('two swarms connect locally', function (t) {
   var pending = 0
   var swarms = []

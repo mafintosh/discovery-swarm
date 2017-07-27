@@ -95,6 +95,8 @@ Swarm.prototype.destroy = function (onclose) {
   if (this._listening) {
     if (this._tcp) this._tcp.close(onserverclose)
     if (this._utp) this._utp.close(onserverclose)
+  } else {
+    this.emit('close')
   }
 
   function onserverclose () {
