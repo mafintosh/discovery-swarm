@@ -67,9 +67,9 @@ Number of peers discovered but not connected to yet
 
 #### `sw.connected`
 
-List of connections to other peers.
+Number of peers connected to
 
-#### `sw.on('connection', connection, info)`
+#### `sw.on('connection', function(connection, info) { ... })`
 
 Emitted when you connect to another peer. Info is an object that contains info about the connection
 
