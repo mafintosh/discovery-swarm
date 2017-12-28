@@ -86,7 +86,7 @@ Emitted when you connect to another peer. Info is an object that contains info a
 
 #### `sw.listen(port)`
 
-Listen on a specific port. Should be called before add
+Listen on a specific port. Should be called before `.join()`.
 
 ## License
 
