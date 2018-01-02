@@ -6,7 +6,7 @@ ids.forEach(function (id) {
   var s = swarm({maxConnections: 2})
 
   s.listen(10000 + id)
-  s.add(Buffer('hello'))
+  s.join(Buffer('hello'))
 
   s.on('connection', function (connection, info) {
     console.log(id, 'connect', info)
