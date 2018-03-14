@@ -164,6 +164,7 @@ Swarm.prototype.addPeer = function (name, peer) {
 Swarm.prototype.removePeer = function (name, peer) {
   peer = peerify(peer, toBuffer(name))
   this._peersSeen[peer.id] = PEER_BANNED
+  this.emit('peer-banned', peer, {reason: 'application'})
 }
 
 Swarm.prototype._dropPeer = function (peer) {
@@ -203,8 +204,15 @@ Swarm.prototype._ondiscover = function () {
   function onpeer (channel, peer) {
     var id = peer.host + ':' + peer.port
     var longId = id + '@' + (channel ? channel.toString('hex') : '')
-    if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) return
-    if (self._peersSeen[id] || self._peersSeen[longId]) return
+    if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) {
+      self.emit('peer-rejected', peer, {reason: 'whitelist'})
+      return
+    }
+    var peerSeen = self._peersSeen[id] || self._peersSeen[longId]
+    if (peerSeen) {
+      self.emit('peer-rejected', peer, {reason: (peerSeen === PEER_BANNED) ? 'banned' : 'duplicate'})
+      return
+    }
     self._peersSeen[longId] = PEER_SEEN
     self._peersQueued.push(peerify(peer, channel))
     self.emit('peer', peer)
@@ -262,6 +270,7 @@ Swarm.prototype._kick = function () {
 
   function ontimeout () {
     debug('timeout %s', next.id)
+    self.emit('connect-timeout', next)
     if (utpSocket) utpSocket.destroy()
     if (tcpSocket) tcpSocket.destroy()
   }
@@ -326,6 +335,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     port: peer ? peer.port : connection.address().port,
     channel: peer ? peer.channel : null
   }
+  this.emit('handshaking', connection, info)
 
   connection.on('close', onclose)
 
@@ -349,12 +359,14 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   if (this.destroyed) connection.destroy()
 
   function ontimeout () {
+    self.emit('handshake-timeout', connection, info)
     connection.destroy()
   }
 
   function onclose () {
     clearTimeout(timeout)
     self.totalConnections--
+    self.emit('connection-closed', connection, info)
 
     var i = self.connections.indexOf(connection)
     if (i > -1) {
@@ -382,7 +394,10 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     if (peer) peer.retries = 0
 
     if (idHex === remoteIdHex) {
-      if (peer) self._peersSeen[peer.id] = PEER_BANNED
+      if (peer) {
+        self._peersSeen[peer.id] = PEER_BANNED
+        self.emit('peer-banned', {peer: peer, reason: 'detected-self'})
+      }
       connection.destroy()
       return
     }
@@ -395,10 +410,12 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       debug('duplicate connections detected in handshake, dropping one')
       if (!(oldType === 'utp' && type === 'tcp')) {
         if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex) || (type === 'utp' && oldType === 'tcp')) {
+          self.emit('redundant-connection', connection, info)
           connection.destroy()
           return
         }
       }
+      self.emit('redundant-connection', old, info)
       delete self._peersIds[remoteIdHex] // delete to not trigger re-queue
       old.destroy()
       old = null // help gc

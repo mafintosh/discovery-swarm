@@ -69,20 +69,87 @@ Number of peers discovered but not connected to yet
 
 Number of peers connected to
 
-#### `sw.on('connection', function(connection, info) { ... })`
+#### `sw.on('peer', function(peer) { ... })`
 
-Emitted when you connect to another peer. Info is an object that contains info about the connection
+Emitted when a peer has been discovered. Peer is an object that contains info about the peer.
+
+```js
+{
+  channel: Buffer('...'), // the channel this connection was initiated on.
+  host: '127.0.0.1', // the remote address of the peer.
+  port: 8080, // the remote port of the peer.
+  id: '192.168.0.5:64374@74657374', // the remote peer's peer-id.
+  retries: 0 // the number of times tried to connect to this peer.
+}
+```
+
+
+#### `sw.on('peer-banned', function(peerAddress, details) { ... })`
+
+Emitted when a peer has been banned as a connection candidate. peerAddress is an object that contains info about the peer. Details is an object that describes the rejection.
+
+```js
+{
+  reason: 'detected-self' // may be 'application' (removePeer() was called) or 'detected-self'
+}
+```
+
+#### `sw.on('peer-rejected', function(peerAddress, details) { ... })`
+
+Emitted when a peer has been rejected as a connection candidate. peerAddress is an object that contains info about the peer. Details is an object that describes the rejection
+
+```js
+{
+  reason: 'duplicate' // may be 'duplicate', 'banned', or 'whitelist'
+}
+```
+
+#### `sw.on('drop', function(peer) { ... })`
+
+Emitted when a peer has been dropped from tracking, typically because it failed too many times to connect. Peer is an object that contains info about the peer.
+
+#### `sw.on('connecting', function(peer) { ... })`
+
+Emitted when a connection is being attempted. Peer is an object that contains info about the peer.
+
+#### `sw.on('connect-timeout', function(peer) { ... })`
+
+Emitted when a connection attempt times out. Peer is an object that contains info about the peer.
+
+#### `sw.on('connect-failed', function(peer) { ... })`
+
+Emitted when a connection attempt fails. Peer is an object that contains info about the peer.
+
+#### `sw.on('handshaking', function(connection, info) { ... })`
+
+Emitted when you've connected to a peer and are now initializing the connection's session. Info is an object that contains info about the connection.
 
 ``` js
 {
-  type: 'tcp', // the type, tcp or utp
-  initiator: true, // whether we initiated the connection or someone else did
-  channel: Buffer('...'), // the channel this connetion was initiated on. only set if initiator === true
+  type: 'tcp', // the type, tcp or utp.
+  initiator: true, // whether we initiated the connection or someone else did.
+  channel: Buffer('...'), // the channel this connection was initiated on. only set if initiator === true.
   host: '127.0.0.1', // the remote address of the peer.
   port: 8080, // the remote port of the peer.
   id: Buffer('...') // the remote peer's peer-id.
 }
 ```
+
+#### `sw.on('handshake-timeout', function(connection, info) { ... })`
+
+Emitted when the handshake fails to complete in a timely fashion. Info is an object that contains info about the connection.
+
+#### `sw.on('connection', function(connection, info) { ... })`
+
+Emitted when you have fully connected to another peer. Info is an object that contains info about the connection.
+
+#### `sw.on('connection-closed', function(connection, info) { ... })`
+
+Emitted when you've disconnected from a peer. Info is an object that contains info about the connection.
+
+#### `sw.on('redundant-connection', function(connection, info) { ... })`
+
+Emitted when multiple connections are detected with a peer, and so one is going to be dropped (the `connection` given). Info is an object that contains info about the connection.
 
 #### `sw.listen(port)`
 
