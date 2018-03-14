@@ -112,13 +112,15 @@ Emitted when a peer has been dropped from tracking, typically because it failed 
 
 Emitted when a connection is being attempted. Peer is an object that contains info about the peer.
 
-#### `sw.on('connect-timeout', function(peer) { ... })`
+#### `sw.on('connect-failed', function(peer, details) { ... })`
 
-Emitted when a connection attempt times out. Peer is an object that contains info about the peer.
+Emitted when a connection attempt fails. Peer is an object that contains info about the peer. Details is an object that describes the failure
 
-#### `sw.on('connect-failed', function(peer) { ... })`
-
-Emitted when a connection attempt fails. Peer is an object that contains info about the peer.
+```js
+{
+  timedout: true // was the failure a timeout?
+}
+```
 
 #### `sw.on('handshaking', function(connection, info) { ... })`
 

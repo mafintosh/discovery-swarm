@@ -226,6 +226,7 @@ Swarm.prototype._kick = function () {
 
   var self = this
   var connected = false
+  var didTimeOut = false
   var next = this._peersQueued.shift()
   while (next && this._peersSeen[next.id] === PEER_BANNED) {
     next = this._peersQueued.shift()
@@ -270,7 +271,7 @@ Swarm.prototype._kick = function () {
 
   function ontimeout () {
     debug('timeout %s', next.id)
-    self.emit('connect-timeout', next)
+    didTimeOut = true
     if (utpSocket) utpSocket.destroy()
     if (tcpSocket) tcpSocket.destroy()
   }
@@ -289,7 +290,7 @@ Swarm.prototype._kick = function () {
       cleanup()
       if (!connected) {
         self.totalConnections--
-        self.emit('connect-failed', next)
+        self.emit('connect-failed', next, {timedout: didTimeOut})
         self._requeue(next)
       }
     }
