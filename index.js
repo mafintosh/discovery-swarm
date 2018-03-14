@@ -54,7 +54,9 @@ function Swarm (opts) {
   this._peersSeen = {}
   this._peersQueued = []
 
-  if (this._options.discovery !== false) this.on('listening', this._ondiscover)
+  if (this._options.discovery !== false) {
+    this.on('listening', this._ondiscover)
+  }
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
@@ -62,6 +64,7 @@ function Swarm (opts) {
     var port = this.address().port
     debug('inbound connection type=%s ip=%s:%d', type, ip, port)
     connection.on('error', onerror)
+    self.totalConnections++
     self._onconnection(connection, type, null)
   }
 }
@@ -263,28 +266,32 @@ Swarm.prototype._kick = function () {
     if (tcpSocket) tcpSocket.destroy()
   }
 
+  function cleanup () {
+    clearTimeout(timeout)
+    if (utpSocket) utpSocket.removeListener('close', onclose)
+    if (tcpSocket) tcpSocket.removeListener('close', onclose)
+  }
+
   function onclose () {
     if (this === utpSocket) utpClosed = true
     if (this === tcpSocket) tcpClosed = true
     if (tcpClosed && utpClosed) {
       debug('onclose utp+tcp %s will-requeue=%d', next.id, !connected)
-      clearTimeout(timeout)
-      if (utpSocket) utpSocket.removeListener('close', onclose)
-      if (tcpSocket) tcpSocket.removeListener('close', onclose)
-      self.totalConnections--
-      if (!connected) self._requeue(next)
+      cleanup()
+      if (!connected) {
+        self.totalConnections--
+        self.emit('connect-failed', next)
+        self._requeue(next)
+      }
     }
   }
 
   function onconnect () {
     connected = true
-    utpClosed = tcpClosed = true
-    onclose() // decs totalConnections which _onconnection also incs
+    cleanup()
 
     var type = this === utpSocket ? 'utp' : 'tcp'
-
     debug('onconnect %s type=%s', next.id, type)
-
     if (type === 'utp' && tcpSocket) tcpSocket.destroy()
     if (type === 'tcp' && utpSocket) utpSocket.destroy()
 
@@ -320,7 +327,6 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     channel: peer ? peer.channel : null
   }
 
-  this.totalConnections++
   connection.on('close', onclose)
 
   if (this._stream) {
