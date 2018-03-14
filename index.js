@@ -322,10 +322,15 @@ Swarm.prototype._requeue = function (peer) {
   }
 }
 
+var connectionDebugIdCounter = 0
 Swarm.prototype._onconnection = function (connection, type, peer) {
   var self = this
   var idHex = this.id.toString('hex')
   var remoteIdHex
+
+  // internal variables used for debugging
+  connection._debugId = ++connectionDebugIdCounter
+  connection._debugStartTime = Date.now()
 
   var info = {
     type: type,
@@ -342,6 +347,8 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   if (this._stream) {
     var wire = connection
     connection = this._stream(info)
+    connection._debugId = wire._debugId
+    connection._debugStartTime = wire._debugStartTime
     if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
     if (this._options.connect) this._options.connect(connection, wire)
