@@ -58,9 +58,7 @@ function Swarm (opts) {
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
-    var ip = connection.remoteAddress || connection.address().address
-    var port = this.address().port
-    debug('inbound connection type=%s ip=%s:%d', type, ip, port)
+    debug('inbound connection type=%s ip=%s:%d', type, connection.remoteAddress, connection.remotePort)
     connection.on('error', onerror)
     self._onconnection(connection, type, null)
   }
@@ -316,8 +314,8 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     type: type,
     initiator: !!peer,
     id: null,
-    host: peer ? peer.host : connection.address().address,
-    port: peer ? peer.port : connection.address().port,
+    host: peer ? peer.host : connection.remoteAddress,
+    port: peer ? peer.port : connection.remotePort,
     channel: peer ? peer.channel : null
   }
 
