@@ -54,7 +54,9 @@ function Swarm (opts) {
   this._peersSeen = {}
   this._peersQueued = []
 
-  if (this._options.discovery !== false) this.on('listening', this._ondiscover)
+  if (this._options.discovery !== false) {
+    this.on('listening', this._ondiscover)
+  }
 
   function onconnection (connection) {
     var type = this === self._tcp ? 'tcp' : 'utp'
@@ -62,6 +64,7 @@ function Swarm (opts) {
     var port = this.address().port
     debug('inbound connection type=%s ip=%s:%d', type, ip, port)
     connection.on('error', onerror)
+    self.totalConnections++
     self._onconnection(connection, type, null)
   }
 }
@@ -161,6 +164,7 @@ Swarm.prototype.addPeer = function (name, peer) {
 Swarm.prototype.removePeer = function (name, peer) {
   peer = peerify(peer, toBuffer(name))
   this._peersSeen[peer.id] = PEER_BANNED
+  this.emit('peer-banned', peer, {reason: 'application'})
 }
 
 Swarm.prototype._dropPeer = function (peer) {
@@ -200,8 +204,15 @@ Swarm.prototype._ondiscover = function () {
   function onpeer (channel, peer) {
     var id = peer.host + ':' + peer.port
     var longId = id + '@' + (channel ? channel.toString('hex') : '')
-    if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) return
-    if (self._peersSeen[id] || self._peersSeen[longId]) return
+    if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) {
+      self.emit('peer-rejected', peer, {reason: 'whitelist'})
+      return
+    }
+    var peerSeen = self._peersSeen[id] || self._peersSeen[longId]
+    if (peerSeen) {
+      self.emit('peer-rejected', peer, {reason: (peerSeen === PEER_BANNED) ? 'banned' : 'duplicate'})
+      return
+    }
     self._peersSeen[longId] = PEER_SEEN
     self._peersQueued.push(peerify(peer, channel))
     self.emit('peer', peer)
@@ -215,6 +226,7 @@ Swarm.prototype._kick = function () {
 
   var self = this
   var connected = false
+  var didTimeOut = false
   var next = this._peersQueued.shift()
   while (next && this._peersSeen[next.id] === PEER_BANNED) {
     next = this._peersQueued.shift()
@@ -259,8 +271,15 @@ Swarm.prototype._kick = function () {
 
   function ontimeout () {
     debug('timeout %s', next.id)
+    didTimeOut = true
     if (utpSocket) utpSocket.destroy()
     if (tcpSocket) tcpSocket.destroy()
+  }
+
+  function cleanup () {
+    clearTimeout(timeout)
+    if (utpSocket) utpSocket.removeListener('close', onclose)
+    if (tcpSocket) tcpSocket.removeListener('close', onclose)
   }
 
   function onclose () {
@@ -268,23 +287,21 @@ Swarm.prototype._kick = function () {
     if (this === tcpSocket) tcpClosed = true
     if (tcpClosed && utpClosed) {
       debug('onclose utp+tcp %s will-requeue=%d', next.id, !connected)
-      clearTimeout(timeout)
-      if (utpSocket) utpSocket.removeListener('close', onclose)
-      if (tcpSocket) tcpSocket.removeListener('close', onclose)
-      self.totalConnections--
-      if (!connected) self._requeue(next)
+      cleanup()
+      if (!connected) {
+        self.totalConnections--
+        self.emit('connect-failed', next, {timedout: didTimeOut})
+        self._requeue(next)
+      }
     }
   }
 
   function onconnect () {
     connected = true
-    utpClosed = tcpClosed = true
-    onclose() // decs totalConnections which _onconnection also incs
+    cleanup()
 
     var type = this === utpSocket ? 'utp' : 'tcp'
-
     debug('onconnect %s type=%s', next.id, type)
-
     if (type === 'utp' && tcpSocket) tcpSocket.destroy()
     if (type === 'tcp' && utpSocket) utpSocket.destroy()
 
@@ -306,10 +323,15 @@ Swarm.prototype._requeue = function (peer) {
   }
 }
 
+var connectionDebugIdCounter = 0
 Swarm.prototype._onconnection = function (connection, type, peer) {
   var self = this
   var idHex = this.id.toString('hex')
   var remoteIdHex
+
+  // internal variables used for debugging
+  connection._debugId = ++connectionDebugIdCounter
+  connection._debugStartTime = Date.now()
 
   var info = {
     type: type,
@@ -319,13 +341,15 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     port: peer ? peer.port : connection.address().port,
     channel: peer ? peer.channel : null
   }
+  this.emit('handshaking', connection, info)
 
-  this.totalConnections++
   connection.on('close', onclose)
 
   if (this._stream) {
     var wire = connection
     connection = this._stream(info)
+    connection._debugId = wire._debugId
+    connection._debugStartTime = wire._debugStartTime
     if (connection.id) idHex = connection.id.toString('hex')
     connection.on('handshake', onhandshake)
     if (this._options.connect) this._options.connect(connection, wire)
@@ -343,12 +367,14 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
   if (this.destroyed) connection.destroy()
 
   function ontimeout () {
+    self.emit('handshake-timeout', connection, info)
     connection.destroy()
   }
 
   function onclose () {
     clearTimeout(timeout)
     self.totalConnections--
+    self.emit('connection-closed', connection, info)
 
     var i = self.connections.indexOf(connection)
     if (i > -1) {
@@ -376,7 +402,10 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     if (peer) peer.retries = 0
 
     if (idHex === remoteIdHex) {
-      if (peer) self._peersSeen[peer.id] = PEER_BANNED
+      if (peer) {
+        self._peersSeen[peer.id] = PEER_BANNED
+        self.emit('peer-banned', {peer: peer, reason: 'detected-self'})
+      }
       connection.destroy()
       return
     }
@@ -389,10 +418,12 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
       debug('duplicate connections detected in handshake, dropping one')
       if (!(oldType === 'utp' && type === 'tcp')) {
         if ((peer && remoteIdHex < idHex) || (!peer && remoteIdHex > idHex) || (type === 'utp' && oldType === 'tcp')) {
+          self.emit('redundant-connection', connection, info)
           connection.destroy()
           return
         }
       }
+      self.emit('redundant-connection', old, info)
       delete self._peersIds[remoteIdHex] // delete to not trigger re-queue
       old.destroy()
       old = null // help gc
