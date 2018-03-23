@@ -13,7 +13,7 @@
     "to-buffer": "^1.0.1"
   },
   "optionalDependencies": {
-    "utp-native": "^1.2.2"
+    "utp-native": "^1.7.0"
   },
   "devDependencies": {
     "standard": "^6.0.7",

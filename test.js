@@ -36,11 +36,13 @@ test('two swarms connect locally', function (t) {
   }
 })
 
-test('two swarms connect and exchange data', function (t) {
+test('two swarms connect and exchange data (tcp)', function (t) {
   var a = swarm({dht: false, utp: false})
   var b = swarm({dht: false, utp: false})
 
-  a.on('connection', function (connection) {
+  a.on('connection', function (connection, info) {
+    t.ok(info.host && typeof info.host === 'string', 'got info.host')
+    t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.write('hello')
     connection.on('data', function (data) {
       a.destroy()
@@ -50,7 +52,35 @@ test('two swarms connect and exchange data', function (t) {
     })
   })
 
-  b.on('connection', function (connection) {
+  b.on('connection', function (connection, info) {
+    t.ok(info.host && typeof info.host === 'string', 'got info.host')
+    t.ok(info.port && typeof info.port === 'number', 'got info.port')
+    connection.pipe(connection)
+  })
+
+  a.join('test')
+  b.join('test')
+})
+
+test('two swarms connect and exchange data (utp)', function (t) {
+  var a = swarm({dht: false, tcp: false})
+  var b = swarm({dht: false, tcp: false})
+
+  a.on('connection', function (connection, info) {
+    t.ok(info.host && typeof info.host === 'string', 'got info.host')
+    t.ok(info.port && typeof info.port === 'number', 'got info.port')
+    connection.write('hello')
+    connection.on('data', function (data) {
+      a.destroy()
+      b.destroy()
+      t.same(data, Buffer('hello'))
+      t.end()
+    })
+  })
+
+  b.on('connection', function (connection, info) {
+    t.ok(info.host && typeof info.host === 'string', 'got info.host')
+    t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.pipe(connection)
   })
 
