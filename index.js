@@ -86,7 +86,6 @@ Swarm.prototype.destroy = function (onclose) {
     for (var i = 0; i < this._utp.connections.length; i++) {
       this._utp.connections[i].destroy()
     }
-    this._utp.unref()
   }
 
   if (this._tcp) {
