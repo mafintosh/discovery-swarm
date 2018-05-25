@@ -47,7 +47,7 @@ test('two swarms connect and exchange data (tcp)', function (t) {
     connection.on('data', function (data) {
       a.destroy()
       b.destroy()
-      t.same(data, Buffer('hello'))
+      t.same(data, Buffer.from('hello'))
       t.end()
     })
   })
@@ -73,7 +73,7 @@ test('two swarms connect and exchange data (utp)', function (t) {
     connection.on('data', function (data) {
       a.destroy()
       b.destroy()
-      t.same(data, Buffer('hello'))
+      t.same(data, Buffer.from('hello'))
       t.end()
     })
   })
@@ -198,4 +198,3 @@ test('swarm ignore whitelist', function (t) {
     t.end()
   }, 250)
 })
-
