@@ -8,6 +8,7 @@ var toBuffer = require('to-buffer')
 var crypto = require('crypto')
 var lpmessage = require('length-prefixed-message')
 var connections = require('connections')
+var natUpnp = require('nat-upnp')
 var debug = require('debug')('discovery-swarm')
 
 try {
@@ -46,6 +47,7 @@ function Swarm (opts) {
   this._discovery = null
   this._tcp = opts.tcp === false ? null : net.createServer().on('connection', onconnection)
   this._utp = opts.utp === false || !utp ? null : utp().on('connection', onconnection)
+  this._upnpClient = natUpnp.createClient()
   this._tcpConnections = this._tcp && connections(this._tcp)
   this._adding = null
   this._listening = false
@@ -100,6 +102,13 @@ Swarm.prototype.destroy = function (onclose) {
     this.emit('close')
   }
 
+  if (this._portMapped) {
+    if (self.address()) {
+      this._upnpClient.portUnmapping({ public: self.address().port })
+    }
+    this._upnpClient.close()
+  }
+
   function onserverclose () {
     if (!--missing) self.emit('close')
   }
@@ -129,8 +138,11 @@ Swarm.prototype.join = function (name, opts, cb) {
     this._adding.push({name: name, opts: opts, cb: cb})
   } else {
     var port
+    var discOpts = { impliedPort: opts.announce && !!this._utp }
     if (opts.announce) port = this.address().port
-    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp}, cb)
+    if (this._portMapped) discOpts = { publicPort: port }
+    debug('joining discovery channel port=%d impliedPort=%s publicPort=%d', port, discOpts.impliedPort, discOpts.publicPort)
+    this._discovery.join(name, port, discOpts, cb)
   }
 }
 
@@ -465,7 +477,9 @@ Swarm.prototype.listen = function (port, onlistening) {
   }
 
   function onlisten () {
-    self.emit('listening')
+    self._portmap(function () {
+      self.emit('listening')
+    })
   }
 }
 
@@ -504,7 +518,9 @@ Swarm.prototype._listenBoth = function (port, onlistening) {
     cleanup()
     self._utp.on('error', forward)
     self._tcp.on('error', forward)
-    self.emit('listening')
+    self._portmap(function () {
+      self.emit('listening')
+    })
   }
 
   function ontcplisten () {
@@ -516,6 +532,25 @@ Swarm.prototype._listenBoth = function (port, onlistening) {
   }
 }
 
+Swarm.prototype._portmap = function (cb) {
+  var self = this
+  var port = this.address().port
+  // ttl of zero means to open port forever
+  this._upnpClient.portMapping({
+    public: port,
+    private: port,
+    ttl: 0
+  }, function (err) {
+    if (err) {
+      debug('error mapping port=%d err=%s', port, err.message)
+      return self.emit('portmap-error', err)
+    }
+    self._portMapped = true
+    debug('port mapped port=%d', port)
+    self.emit('port-mapped')
+    if (cb) { cb() }
+  })
+}
 function handshake (socket, id, cb) {
   lpmessage.write(socket, id)
   lpmessage.read(socket, cb)
