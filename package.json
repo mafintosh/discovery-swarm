@@ -9,6 +9,7 @@
     "debug": "^2.4.5",
     "discovery-channel": "^5.5.1",
     "length-prefixed-message": "^3.0.3",
+    "nat-upnp": "^1.1.1",
     "pump": "^1.0.1",
     "to-buffer": "^1.0.1"
   },
