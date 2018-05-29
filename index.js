@@ -544,12 +544,13 @@ Swarm.prototype._portmap = function (cb) {
   }, function (err) {
     if (err) {
       debug('error mapping port=%d err=%s', port, err.message)
+      cb(err)
       return self.emit('portmap-error', err)
     }
     self._portMapped = true
     debug('port mapped port=%d', port)
     self.emit('port-mapped')
-    cb(err)
+    cb()
   })
 }
 function handshake (socket, id, cb) {
