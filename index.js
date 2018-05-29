@@ -533,6 +533,7 @@ Swarm.prototype._listenBoth = function (port, onlistening) {
 }
 
 Swarm.prototype._portmap = function (cb) {
+  cb = cb || noop
   var self = this
   var port = this.address().port
   // ttl of zero means to open port forever
@@ -541,6 +542,7 @@ Swarm.prototype._portmap = function (cb) {
     private: port,
     ttl: 0
   }, function (err) {
+    cb(err)
     if (err) {
       debug('error mapping port=%d err=%s', port, err.message)
       return self.emit('portmap-error', err)
@@ -548,7 +550,6 @@ Swarm.prototype._portmap = function (cb) {
     self._portMapped = true
     debug('port mapped port=%d', port)
     self.emit('port-mapped')
-    if (cb) { cb() }
   })
 }
 function handshake (socket, id, cb) {
