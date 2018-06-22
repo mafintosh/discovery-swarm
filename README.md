@@ -30,7 +30,6 @@ sw.on('connection', function (connection) {
 #### `var sw = swarm(opts)`
 
 Create a new swarm. Options include:
-
 ```js
 {
   id: crypto.randomBytes(32), // peer-id for user
@@ -155,7 +154,7 @@ Emitted when multiple connections are detected with a peer, and so one is going 
 
 #### `sw.listen(port)`
 
-Listen on a specific port. Should be called before add
+Listen on a specific port. Should be called before join
 
 ## License
 
