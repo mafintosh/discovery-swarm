@@ -155,7 +155,7 @@ Emitted when multiple connections are detected with a peer, and so one is going 
 
 #### `sw.listen(port)`
 
-Listen on a specific port. Should be called before add
+Listen on a specific port. Should be called before `.join()`.
 
 ## License
 
