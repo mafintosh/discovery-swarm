@@ -9,6 +9,14 @@ test('swarm destroys immediately', function (t) {
   })
 })
 
+test('swarm destroys immediately (utp)', function (t) {
+  var s = swarm({dht: false, tcp: false})
+  s.destroy(function () {
+    t.ok(true, 'destroyed ok')
+    t.end()
+  })
+})
+
 test('two swarms connect locally', function (t) {
   var pending = 0
   var swarms = []
@@ -71,10 +79,16 @@ test('two swarms connect and exchange data (utp)', function (t) {
     t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.write('hello')
     connection.on('data', function (data) {
-      a.destroy()
-      b.destroy()
+      t.same(a._tcp, null, 'no tcp handler')
+      t.same(b._tcp, null, 'no tcp handler')
+      a.destroy(function () {
+        t.pass('a destroy')
+        b.destroy(function () {
+          t.pass('b destroy')
+          t.end()
+        })
+      })
       t.same(data, Buffer.from('hello'))
-      t.end()
     })
   })
 
