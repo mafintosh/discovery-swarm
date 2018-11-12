@@ -52,6 +52,10 @@ If you pass `opts.announce` as a falsy value you don't announce your port (e.g. 
 
 If you specify cb, it will be called *when the first round* of discovery has completed. But only on the first round.
 
+#### `sw.listen(port)`
+
+Listen on a specific port. Should be called before join. If this isn't done, then `.join()` will cause the peer to listen on an arbitrary unused port assigned by the operating system.
+
 #### `sw.leave(key)`
 
 Leave the channel specified `key`
@@ -151,10 +155,6 @@ Emitted when you've disconnected from a peer. Info is an object that contains in
 #### `sw.on('redundant-connection', function(connection, info) { ... })`
 
 Emitted when multiple connections are detected with a peer, and so one is going to be dropped (the `connection` given). Info is an object that contains info about the connection.
-
-#### `sw.listen(port)`
-
-Listen on a specific port. Should be called before join
 
 ## License
 
