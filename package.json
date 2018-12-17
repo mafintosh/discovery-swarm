@@ -4,7 +4,6 @@
   "description": "A network swarm that uses discovery-channel to find peers",
   "main": "index.js",
   "dependencies": {
-    "buffer-equals": "^1.0.3",
     "connections": "^1.4.2",
     "debug": "^3.1.0",
     "discovery-channel": "^5.5.1",
