@@ -145,10 +145,17 @@ test('connect many and send data', function (t) {
         t.pass('swarm #' + i + ' received ' + data)
         if (++cnt < runs - 1) return
         if (++outer < runs) return
-        swarms.forEach(function (other) {
-          other.destroy()
+
+        var closed = 0
+        swarms.forEach(function (other, j) {
+          other.destroy(function () {
+            closed += 1
+            t.pass('swarm #' + j + ' closed')
+            if (closed === runs) {
+              t.end()
+            }
+          })
         })
-        t.end()
       })
     })
 
