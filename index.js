@@ -144,7 +144,7 @@ Swarm.prototype.leave = function (name) {
       }
     }
   } else {
-    this._discovery.leave(name, this.address().port)
+    this._discovery.leave(name, this.address() ? this.address().port : 0)
   }
 }
 
