@@ -3,7 +3,6 @@ var pump = require('pump')
 var events = require('events')
 var util = require('util')
 var net = require('net')
-var equals = require('buffer-equals')
 var toBuffer = require('to-buffer')
 var crypto = require('crypto')
 var lpmessage = require('length-prefixed-message')
@@ -139,7 +138,7 @@ Swarm.prototype.leave = function (name) {
 
   if (this._adding) {
     for (var i = 0; i < this._adding.length; i++) {
-      if (equals(this._adding[i].name, name)) {
+      if (Buffer.equals(this._adding[i].name, name)) {
         this._adding.splice(i, 1)
         return
       }
