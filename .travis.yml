@@ -1,11 +1,7 @@
 language: node_js
-sudo: false
-dist: trusty
-matrix:
-  include:
-    - os: osx
-    - os: windows
-
+os: windows
+env:
+  - TAP_DIAG=1 NODE_DEBUG=1
 node_js:
   - "node"
   - "10"

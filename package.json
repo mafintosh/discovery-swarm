@@ -20,7 +20,7 @@
     "tape": "^4.4.0"
   },
   "scripts": {
-    "test": "standard && tape test.js"
+    "test": "standard && tap -Rtap --expose-gc -T test.js"
   },
   "repository": {
     "type": "git",
