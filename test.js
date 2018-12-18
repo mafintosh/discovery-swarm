@@ -165,24 +165,26 @@ test('connect many and send data', function (t) {
 
 test('socket should get destroyed on a bad peer', function (t) {
   var s = swarm({dht: false, utp: false})
+  var connectingCalled = false
+  var port = 10003
 
-  s.addPeer('test', 10003) // should not connect
-
-  process.nextTick(function () {
-    t.equal(s.totalConnections, 1, '1 connection')
+  s.on('connecting', function (conn) {
+    connectingCalled = true
+    t.equals(conn.port, port, 'port')
   })
-
+  s.on('connect-failed', function (peer) {
+    t.ok(connectingCalled, 'connecting event was called')
+    t.equals(peer.port, port, 'connecting to the peer failed')
+    t.equal(s.totalConnections, 0, '0 connections')
+    s.destroy()
+    t.end()
+  })
   s.on('connection', function (connection, type) {
     t.false(connection, 'should never get here')
     s.destroy()
     t.end()
   })
-
-  setTimeout(function () {
-    t.equal(s.totalConnections, 0, '0 connections')
-    s.destroy()
-    t.end()
-  }, 250)
+  s.addPeer('test', port) // should not connect
 })
 
 test('swarm should not connect to self', function (t) {
