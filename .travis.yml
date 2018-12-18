@@ -1,4 +1,11 @@
 language: node_js
+sudo: false
+dist: trusty
+matrix:
+  include:
+    - os: osx
+    - os: windows
+
 node_js:
   - "node"
   - "10"
