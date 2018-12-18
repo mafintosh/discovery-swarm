@@ -1,23 +1,23 @@
 var test = require('tap').test
 var swarm = require('./')
 
-test('swarm destroys immediately', function (t) {
+test('swarm destroys immediately', t => new Promise(resolve => {
   var s = swarm({dht: false, utp: false})
   s.destroy(function () {
     t.ok(true, 'destroyed ok')
-    t.end()
+    resolve()
   })
-})
+}))
 
-test('swarm destroys immediately (utp)', function (t) {
+test('swarm destroys immediately (utp)', t => new Promise(resolve => {
   var s = swarm({dht: false, tcp: false})
   s.destroy(function () {
     t.ok(true, 'destroyed ok')
-    t.end()
+    resolve()
   })
-})
+}))
 
-test('two swarms connect locally', function (t) {
+test('two swarms connect locally', t => new Promise(resolve => {
   var pending = 0
   var swarms = []
 
@@ -30,18 +30,18 @@ test('two swarms connect locally', function (t) {
     pending++
     s.join('test')
 
-    s.on('connection', function (connection, type) {
+    s.on('connection', function (connection) {
       t.ok(connection, 'got connection')
       if (--pending === 0) {
-        cleanupSwarms(swarms, t)
+        resolve(swarms)
       }
     })
 
     return s
   }
-})
+}).then(cleanupSwarms))
 
-test('two swarms connect and exchange data (tcp)', function (t) {
+test('two swarms connect and exchange data (tcp)', t => new Promise(resolve => {
   var a = swarm({dht: false, utp: false})
   var b = swarm({dht: false, utp: false})
 
@@ -50,8 +50,8 @@ test('two swarms connect and exchange data (tcp)', function (t) {
     t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.write('hello')
     connection.on('data', function (data) {
-      t.same(data, Buffer.from('hello'))
-      cleanupSwarms([a, b], t)
+      t.equals(Buffer.compare(data, Buffer.from('hello')), 0, 'received correct data')
+      resolve([a, b])
     })
   })
 
@@ -63,9 +63,9 @@ test('two swarms connect and exchange data (tcp)', function (t) {
 
   a.join('test')
   b.join('test')
-})
+}).then(cleanupSwarms))
 
-test('two swarms connect and exchange data (utp)', function (t) {
+test('two swarms connect and exchange data (utp)', t => new Promise(resolve => {
   var a = swarm({dht: false, tcp: false})
   var b = swarm({dht: false, tcp: false})
 
@@ -74,10 +74,10 @@ test('two swarms connect and exchange data (utp)', function (t) {
     t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.write('hello')
     connection.on('data', function (data) {
-      t.same(a._tcp, null, 'no tcp handler')
-      t.same(b._tcp, null, 'no tcp handler')
-      cleanupSwarms([a, b], t)
-      t.same(data, Buffer.from('hello'))
+      t.equals(a._tcp, null, 'no tcp handler')
+      t.equals(b._tcp, null, 'no tcp handler')
+      t.equals(Buffer.compare(data, Buffer.from('hello')), 0, 'received correct data')
+      resolve([a, b])
     })
   })
 
@@ -89,9 +89,9 @@ test('two swarms connect and exchange data (utp)', function (t) {
 
   a.join('test')
   b.join('test')
-})
+}).then(cleanupSwarms))
 
-test('two swarms connect and callback', function (t) {
+test('two swarms connect and callback', t => new Promise(resolve => {
   var a = swarm({dht: false, utp: false})
   var b = swarm({dht: false, utp: false})
   var pending = 2
@@ -106,11 +106,11 @@ test('two swarms connect and callback', function (t) {
   })
 
   function done () {
-    cleanupSwarms([a, b], t)
+    resolve([a, b])
   }
-})
+}).then(cleanupSwarms))
 
-test('connect many and send data', function (t) {
+test('connect many and send data', t => new Promise(resolve => {
   var runs = 10
   var outer = 0
   var swarms = []
@@ -133,16 +133,16 @@ test('connect many and send data', function (t) {
         if (++cnt < runs - 1) return
         if (++outer < runs) return
 
-        cleanupSwarms(swarms, t)
+        resolve(swarms)
       })
     })
 
     s.join('test')
   }
-})
+}).then(cleanupSwarms))
 
-test('socket should get destroyed on a bad peer', function (t) {
-  return new Promise(function (resolve, reject) {
+test('socket should get destroyed on a bad peer', t => 
+  new Promise(function (resolve, reject) {
     var s = swarm({dht: false, utp: false})
     var connectingCalled = false
     var port = 10003
@@ -155,28 +155,19 @@ test('socket should get destroyed on a bad peer', function (t) {
       t.ok(connectingCalled, 'connecting event was called')
       t.equals(peer.port, port, 'connecting to the peer failed')
       t.equal(s.totalConnections, 0, '0 connections')
-      end()
+      resolve([s])
     })
-    s.on('close', function () {
-      reject(new Error('Premature close!'))
-    })
+    s.on('close', () => reject(new Error('Premature close!')))
     s.on('error', reject)
-    s.on('connection', function (connection, type) {
-      t.false(connection, 'should never get here')
-      end()
-    })
+    s.on('connection', () => reject(new Error('unexpected connection')))
     s.addPeer('test', port) // should not connect
+  }).then(cleanupSwarms)
+)
 
-    function end () {
-      cleanupSwarms([s], { pass: msg => t.pass(msg), end: () => resolve() })
-    }
-  })
-})
-
-test('swarm should not connect to self', function (t) {
+test('swarm should not connect to self', t => new Promise(resolve => {
   var s = swarm({dht: false, utp: false})
 
-  s.on('connection', function (connection, type) {
+  s.on('connection', function (connection) {
     t.false(connection, 'should never get here')
     end()
   })
@@ -189,25 +180,27 @@ test('swarm should not connect to self', function (t) {
   s.join('test')
 
   function end () {
-    cleanupSwarms(([s]), t)
+    resolve([s])
   }
-})
+}).then(cleanupSwarms))
 
-test('swarm ignore whitelist', function (t) {
+test('swarm ignore whitelist', t => new Promise(resolve => {
   var s = swarm({dht: false, utp: false, whitelist: ['9.9.9.9']})
   t.equals(s.addPeer('127.0.0.1', 9999), false)
-  cleanupSwarms([s], t)
-})
+  resolve([s])
+}).then(cleanupSwarms))
 
-function cleanupSwarms (swarms, t) {
-  var count = 0
-  swarms.forEach(function (swarm, i) {
-    swarm.removeAllListeners('close')
-    swarm.destroy(function () {
-      t.pass('swarm #' + i + ' closed')
-      if (++count === swarms.length) {
-        t.end()
-      }
+function cleanupSwarms (swarms) {
+  return new Promise((resolve, reject) => {
+    var count = 0
+    swarms.forEach(function (swarm, i) {
+      swarm.removeAllListeners('close')
+      swarm.on('error', reject)
+      swarm.destroy(function () {
+        if (++count === swarms.length) {
+          resolve()
+        }
+      })
     })
   })
 }
