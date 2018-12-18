@@ -150,12 +150,13 @@ Swarm.prototype.leave = function (name) {
 
 Swarm.prototype.addPeer = function (name, peer) {
   peer = peerify(peer, toBuffer(name))
-  if (this._peersSeen[peer.id]) return
-  if (this._whitelist.length && this._whitelist.indexOf(peer.host) === -1) return
+  if (this._peersSeen[peer.id]) return false
+  if (this._whitelist.length && this._whitelist.indexOf(peer.host) === -1) return false
   this._peersSeen[peer.id] = PEER_SEEN
   this._peersQueued.push(peer)
   this.emit('peer', peer)
   this._kick()
+  return true
 }
 
 Swarm.prototype.removePeer = function (name, peer) {

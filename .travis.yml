@@ -1,6 +1,10 @@
 language: node_js
+os: windows
+env:
+  - TAP_DIAG=1 NODE_DEBUG=1
 node_js:
   - "node"
+  - "10"
   - "8"
   - "6"
   - "4"
