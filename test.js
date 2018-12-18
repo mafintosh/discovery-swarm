@@ -1,4 +1,4 @@
-var test = require('tape')
+var test = require('tap').test
 var swarm = require('./')
 
 test('swarm destroys immediately', function (t) {
@@ -142,31 +142,35 @@ test('connect many and send data', function (t) {
 })
 
 test('socket should get destroyed on a bad peer', function (t) {
-  var s = swarm({dht: false, utp: false})
-  var connectingCalled = false
-  var port = 10003
+  return new Promise(function (resolve, reject) {
+    var s = swarm({dht: false, utp: false})
+    var connectingCalled = false
+    var port = 10003
 
-  s.on('connecting', function (conn) {
-    connectingCalled = true
-    t.equals(conn.port, port, 'port')
-  })
-  s.on('connect-failed', function (peer) {
-    t.ok(connectingCalled, 'connecting event was called')
-    t.equals(peer.port, port, 'connecting to the peer failed')
-    t.equal(s.totalConnections, 0, '0 connections')
-    end()
-  })
-  s.on('connection', function (connection, type) {
-    t.false(connection, 'should never get here')
-    end()
-  })
-  s.addPeer('test', port) // should not connect
-
-  function end () {
-    s.destroy(function () {
-      t.end()
+    s.on('connecting', function (conn) {
+      connectingCalled = true
+      t.equals(conn.port, port, 'port')
     })
-  }
+    s.on('connect-failed', function (peer) {
+      t.ok(connectingCalled, 'connecting event was called')
+      t.equals(peer.port, port, 'connecting to the peer failed')
+      t.equal(s.totalConnections, 0, '0 connections')
+      end()
+    })
+    s.on('close', function () {
+      reject(new Error('Premature close!'))
+    })
+    s.on('error', reject)
+    s.on('connection', function (connection, type) {
+      t.false(connection, 'should never get here')
+      end()
+    })
+    s.addPeer('test', port) // should not connect
+
+    function end () {
+      cleanupSwarms([s], { pass: msg => t.pass(msg), end: () => resolve() })
+    }
+  })
 })
 
 test('swarm should not connect to self', function (t) {
@@ -185,23 +189,20 @@ test('swarm should not connect to self', function (t) {
   s.join('test')
 
   function end () {
-    s.destroy(function () {
-      t.end()
-    })
+    cleanupSwarms(([s]), t)
   }
 })
 
 test('swarm ignore whitelist', function (t) {
   var s = swarm({dht: false, utp: false, whitelist: ['9.9.9.9']})
   t.equals(s.addPeer('127.0.0.1', 9999), false)
-  s.destroy(function () {
-    t.end()
-  })
+  cleanupSwarms([s], t)
 })
 
 function cleanupSwarms (swarms, t) {
   var count = 0
   swarms.forEach(function (swarm, i) {
+    swarm.removeAllListeners('close')
     swarm.destroy(function () {
       t.pass('swarm #' + i + ' closed')
       if (++count === swarms.length) {
