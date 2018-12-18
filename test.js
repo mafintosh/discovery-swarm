@@ -33,10 +33,7 @@ test('two swarms connect locally', function (t) {
     s.on('connection', function (connection, type) {
       t.ok(connection, 'got connection')
       if (--pending === 0) {
-        swarms.forEach(function (s) {
-          s.destroy()
-        })
-        t.end()
+        cleanupSwarms(swarms, t)
       }
     })
 
@@ -53,10 +50,8 @@ test('two swarms connect and exchange data (tcp)', function (t) {
     t.ok(info.port && typeof info.port === 'number', 'got info.port')
     connection.write('hello')
     connection.on('data', function (data) {
-      a.destroy()
-      b.destroy()
       t.same(data, Buffer.from('hello'))
-      t.end()
+      cleanupSwarms([a, b], t)
     })
   })
 
@@ -81,13 +76,7 @@ test('two swarms connect and exchange data (utp)', function (t) {
     connection.on('data', function (data) {
       t.same(a._tcp, null, 'no tcp handler')
       t.same(b._tcp, null, 'no tcp handler')
-      a.destroy(function () {
-        t.pass('a destroy')
-        b.destroy(function () {
-          t.pass('b destroy')
-          t.end()
-        })
-      })
+      cleanupSwarms([a, b], t)
       t.same(data, Buffer.from('hello'))
     })
   })
@@ -117,9 +106,7 @@ test('two swarms connect and callback', function (t) {
   })
 
   function done () {
-    a.destroy()
-    b.destroy()
-    t.end()
+    cleanupSwarms([a, b], t)
   }
 })
 
@@ -146,16 +133,7 @@ test('connect many and send data', function (t) {
         if (++cnt < runs - 1) return
         if (++outer < runs) return
 
-        var closed = 0
-        swarms.forEach(function (other, j) {
-          other.destroy(function () {
-            closed += 1
-            t.pass('swarm #' + j + ' closed')
-            if (closed === runs) {
-              t.end()
-            }
-          })
-        })
+        cleanupSwarms(swarms, t)
       })
     })
 
@@ -176,15 +154,19 @@ test('socket should get destroyed on a bad peer', function (t) {
     t.ok(connectingCalled, 'connecting event was called')
     t.equals(peer.port, port, 'connecting to the peer failed')
     t.equal(s.totalConnections, 0, '0 connections')
-    s.destroy()
-    t.end()
+    end()
   })
   s.on('connection', function (connection, type) {
     t.false(connection, 'should never get here')
-    s.destroy()
-    t.end()
+    end()
   })
   s.addPeer('test', port) // should not connect
+
+  function end () {
+    s.destroy(function () {
+      t.end()
+    })
+  }
 })
 
 test('swarm should not connect to self', function (t) {
@@ -192,21 +174,39 @@ test('swarm should not connect to self', function (t) {
 
   s.on('connection', function (connection, type) {
     t.false(connection, 'should never get here')
-    s.destroy()
-    t.end()
+    end()
   })
 
   setTimeout(function () {
     t.equal(s.totalConnections, 0, '0 connections')
-    s.destroy()
-    t.end()
+    end()
   }, 250)
 
   s.join('test')
+
+  function end () {
+    s.destroy(function () {
+      t.end()
+    })
+  }
 })
 
 test('swarm ignore whitelist', function (t) {
   var s = swarm({dht: false, utp: false, whitelist: ['9.9.9.9']})
   t.equals(s.addPeer('127.0.0.1', 9999), false)
-  t.end()
+  s.destroy(function () {
+    t.end()
+  })
 })
+
+function cleanupSwarms (swarms, t) {
+  var count = 0
+  swarms.forEach(function (swarm, i) {
+    swarm.destroy(function () {
+      t.pass('swarm #' + i + ' closed')
+      if (++count === swarms.length) {
+        t.end()
+      }
+    })
+  })
+}
