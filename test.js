@@ -141,7 +141,7 @@ test('connect many and send data', t => new Promise(resolve => {
   }
 }).then(cleanupSwarms))
 
-test('socket should get destroyed on a bad peer', t => 
+test('socket should get destroyed on a bad peer', t =>
   new Promise(function (resolve, reject) {
     var s = swarm({dht: false, utp: false})
     var connectingCalled = false
