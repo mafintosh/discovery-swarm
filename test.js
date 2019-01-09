@@ -10,11 +10,20 @@ test('swarm destroys immediately', function (t) {
 })
 
 test('swarm destroys immediately (utp)', function (t) {
-  var s = swarm({dht: false, tcp: false})
+  var s = swarm({ dht: false, tcp: false })
   s.destroy(function () {
     t.ok(true, 'destroyed ok')
     t.end()
   })
+})
+
+test('swarm leave ok', function (t) {
+  var s = swarm({ dht: false, utp: false })
+  s.join('test')
+  s.leave('test')
+  s.destroy()
+  t.pass('leave ok')
+  t.end()
 })
 
 test('two swarms connect locally', function (t) {
