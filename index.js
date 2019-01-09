@@ -138,7 +138,7 @@ Swarm.prototype.leave = function (name) {
 
   if (this._adding) {
     for (var i = 0; i < this._adding.length; i++) {
-      if (Buffer.equals(this._adding[i].name, name)) {
+      if (name.equals(this._adding[i].name)) {
         this._adding.splice(i, 1)
         return
       }
