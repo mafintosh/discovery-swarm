@@ -2,7 +2,7 @@ var test = require('tape')
 var swarm = require('./')
 
 test('swarm destroys immediately', function (t) {
-  var s = swarm({dht: false, utp: false})
+  var s = swarm({ dht: false, utp: false })
   s.destroy(function () {
     t.ok(true, 'destroyed ok')
     t.end()
@@ -25,7 +25,7 @@ test('two swarms connect locally', function (t) {
   create()
 
   function create () {
-    var s = swarm({dht: false, utp: false})
+    var s = swarm({ dht: false, utp: false })
     swarms.push(s)
     pending++
     s.join('test')
@@ -45,8 +45,8 @@ test('two swarms connect locally', function (t) {
 })
 
 test('two swarms connect and exchange data (tcp)', function (t) {
-  var a = swarm({dht: false, utp: false})
-  var b = swarm({dht: false, utp: false})
+  var a = swarm({ dht: false, utp: false })
+  var b = swarm({ dht: false, utp: false })
 
   a.on('connection', function (connection, info) {
     t.ok(info.host && typeof info.host === 'string', 'got info.host')
@@ -71,8 +71,8 @@ test('two swarms connect and exchange data (tcp)', function (t) {
 })
 
 test('two swarms connect and exchange data (utp)', function (t) {
-  var a = swarm({dht: false, tcp: false})
-  var b = swarm({dht: false, tcp: false})
+  var a = swarm({ dht: false, tcp: false })
+  var b = swarm({ dht: false, tcp: false })
 
   a.on('connection', function (connection, info) {
     t.ok(info.host && typeof info.host === 'string', 'got info.host')
@@ -103,8 +103,8 @@ test('two swarms connect and exchange data (utp)', function (t) {
 })
 
 test('two swarms connect and callback', function (t) {
-  var a = swarm({dht: false, utp: false})
-  var b = swarm({dht: false, utp: false})
+  var a = swarm({ dht: false, utp: false })
+  var b = swarm({ dht: false, utp: false })
   var pending = 2
 
   a.join('test', function () {
@@ -131,7 +131,7 @@ test('connect many and send data', function (t) {
   for (var i = 0; i < runs; i++) create(i)
 
   function create (i) {
-    var s = swarm({dht: false, utp: false})
+    var s = swarm({ dht: false, utp: false })
     swarms.push(s)
 
     var seen = {}
@@ -157,7 +157,7 @@ test('connect many and send data', function (t) {
 })
 
 test('socket should get destroyed on a bad peer', function (t) {
-  var s = swarm({dht: false, utp: false})
+  var s = swarm({ dht: false, utp: false })
 
   s.addPeer('test', 10003) // should not connect
 
@@ -179,7 +179,7 @@ test('socket should get destroyed on a bad peer', function (t) {
 })
 
 test('swarm should not connect to self', function (t) {
-  var s = swarm({dht: false, utp: false})
+  var s = swarm({ dht: false, utp: false })
 
   s.on('connection', function (connection, type) {
     t.false(connection, 'should never get here')
@@ -197,7 +197,7 @@ test('swarm should not connect to self', function (t) {
 })
 
 test('swarm ignore whitelist', function (t) {
-  var s = swarm({dht: false, utp: false, whitelist: ['9.9.9.9']})
+  var s = swarm({ dht: false, utp: false, whitelist: ['9.9.9.9'] })
   var emitted = false
 
   s.on('peer', function () {

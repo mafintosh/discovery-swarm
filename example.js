@@ -3,7 +3,7 @@ var swarm = require('./')
 var ids = [1, 2, 3, 4, 5]
 
 ids.forEach(function (id) {
-  var s = swarm({maxConnections: 2})
+  var s = swarm({ maxConnections: 2 })
 
   s.listen(10000 + id)
   s.join(Buffer.from('hello'))

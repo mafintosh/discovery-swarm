@@ -125,11 +125,11 @@ Swarm.prototype.join = function (name, opts, cb) {
   if (!this._listening && !this._adding) this._listenNext()
 
   if (this._adding) {
-    this._adding.push({name: name, opts: opts, cb: cb})
+    this._adding.push({ name: name, opts: opts, cb: cb })
   } else {
     var port
     if (opts.announce) port = this.address().port
-    this._discovery.join(name, port, {impliedPort: opts.announce && !!this._utp}, cb)
+    this._discovery.join(name, port, { impliedPort: opts.announce && !!this._utp }, cb)
   }
 }
 
@@ -161,7 +161,7 @@ Swarm.prototype.addPeer = function (name, peer) {
 Swarm.prototype.removePeer = function (name, peer) {
   peer = peerify(peer, toBuffer(name))
   this._peersSeen[peer.id] = PEER_BANNED
-  this.emit('peer-banned', peer, {reason: 'application'})
+  this.emit('peer-banned', peer, { reason: 'application' })
 }
 
 Swarm.prototype._dropPeer = function (peer) {
@@ -202,12 +202,12 @@ Swarm.prototype._ondiscover = function () {
     var id = peer.host + ':' + peer.port
     var longId = id + '@' + (channel ? channel.toString('hex') : '')
     if (self._whitelist.length && self._whitelist.indexOf(peer.host) === -1) {
-      self.emit('peer-rejected', peer, {reason: 'whitelist'})
+      self.emit('peer-rejected', peer, { reason: 'whitelist' })
       return
     }
     var peerSeen = self._peersSeen[id] || self._peersSeen[longId]
     if (peerSeen) {
-      self.emit('peer-rejected', peer, {reason: (peerSeen === PEER_BANNED) ? 'banned' : 'duplicate'})
+      self.emit('peer-rejected', peer, { reason: (peerSeen === PEER_BANNED) ? 'banned' : 'duplicate' })
       return
     }
     self._peersSeen[longId] = PEER_SEEN
@@ -287,7 +287,7 @@ Swarm.prototype._kick = function () {
       cleanup()
       if (!connected) {
         self.totalConnections--
-        self.emit('connect-failed', next, {timedout: didTimeOut})
+        self.emit('connect-failed', next, { timedout: didTimeOut })
         self._requeue(next)
       }
     }
@@ -401,7 +401,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     if (idHex === remoteIdHex) {
       if (peer) {
         self._peersSeen[peer.id] = PEER_BANNED
-        self.emit('peer-banned', {peer: peer, reason: 'detected-self'})
+        self.emit('peer-banned', { peer: peer, reason: 'detected-self' })
       }
       connection.destroy()
       return
@@ -525,7 +525,7 @@ function onerror () {
 }
 
 function peerify (peer, channel) {
-  if (typeof peer === 'number') peer = {port: peer}
+  if (typeof peer === 'number') peer = { port: peer }
   if (!peer.host) peer.host = '127.0.0.1'
   peer.id = peer.host + ':' + peer.port + '@' + (channel ? channel.toString('hex') : '')
   peer.retries = 0
