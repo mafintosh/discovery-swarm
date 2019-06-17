@@ -1,5 +1,6 @@
 var test = require('tape')
 var swarm = require('./')
+var net = require('net')
 
 test('swarm destroys immediately', function (t) {
   var s = swarm({ dht: false, utp: false })
@@ -221,3 +222,55 @@ test('swarm ignore whitelist', function (t) {
     t.end()
   }, 250)
 })
+
+test('peer after join', function (t) {
+  assureNet(function (err) {
+    if (err) {
+      t.fail(err)
+      t.end()
+      return
+    }
+    var name = 'op_' + Math.random().toString(32)
+    function createSwarm (id, cb) {
+      var s = swarm()
+      var cleared = false
+      s.on('peer', peerFail)
+      s.join(name, clear)
+      return clear
+
+      function clear () {
+        if (cleared) return
+        cleared = true
+        t.ok(id + ' connected.')
+        s.removeListener('peer', peerFail)
+        s.destroy(cb)
+      }
+
+      function peerFail () {
+        t.fail('peer appeared on ' + id + ' before it joined.')
+        clear()
+      }
+    }
+
+    var count = 2
+
+    createSwarm('s1', oneDone)
+    createSwarm('s2', oneDone)
+
+    function oneDone () {
+      if (--count) return
+      t.end()
+    }
+  })
+})
+
+function assureNet (cb) {
+  var s = new net.Socket()
+  s.on('error', function (err) {
+    cb(err.code === 'ENOTFOUND' ? 'Can not connect to the internet' : err)
+  })
+  s.connect(80, 'google.com', function () {
+    s.destroy()
+    cb()
+  })
+}
