@@ -206,10 +206,15 @@ Swarm.prototype._ondiscover = function () {
       return
     }
     var peerSeen = self._peersSeen[id] || self._peersSeen[longId]
-    if (peerSeen) {
-      self.emit('peer-rejected', peer, { reason: (peerSeen === PEER_BANNED) ? 'banned' : 'duplicate' })
+    var peerConnected = self._peersIds[id] || self._peersIds[longId]
+    if (peerSeen && peerSeen === PEER_BANNED) {
+      self.emit('peer-rejected', peer, { reason: 'banned' })
+      return
+    } else if (peerSeen && peerConnected) {
+      self.emit('peer-rejected', peer, { reason: 'duplicate' })
       return
     }
+
     self._peersSeen[longId] = PEER_SEEN
     self._peersQueued.push(peerify(peer, channel))
     self.emit('peer', peer)
