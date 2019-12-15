@@ -242,7 +242,7 @@ test('peer should be able to reconnect after disconnection', function (t) {
     return s
   }
 
-  function proceedWithDisconnection() {
+  function proceedWithDisconnection () {
     stablePeer.on('connection-closed', function (connection, info) {
       reconnect()
     })
@@ -250,8 +250,8 @@ test('peer should be able to reconnect after disconnection', function (t) {
     disconnectingPeer.leave('test')
   }
 
-  function reconnect() {
-    if(!reconnecting) {
+  function reconnect () {
+    if (!reconnecting) {
       reconnecting = true
 
       failInCaseOfRejection()
@@ -261,7 +261,7 @@ test('peer should be able to reconnect after disconnection', function (t) {
     }
   }
 
-  function failInCaseOfRejection() {
+  function failInCaseOfRejection () {
     stablePeer.on('peer-rejected', function (peerAddress, details) {
       t.fail('Peer should be able to reconnect but is rejected')
       swarms.forEach(function (s) {
@@ -271,7 +271,7 @@ test('peer should be able to reconnect after disconnection', function (t) {
     })
   }
 
-  function successIfAbleToReconnect() {
+  function successIfAbleToReconnect () {
     disconnectingPeer.on('connection', function (connection, info) {
       t.ok(connection, 'got connection')
       swarms.forEach(function (s) {
