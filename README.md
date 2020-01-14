@@ -38,7 +38,8 @@ Create a new swarm. Options include:
   utp: true, // use utp for discovery
   tcp: true, // use tcp for discovery
   maxConnections: 0, // max number of connections.
-  whitelist: [] // array of ip addresses to restrict connections to
+  whitelist: [], // array of ip addresses to restrict connections to
+  keepExistingConnections: false  // by default, prefer tcp by dropping old utp connections
 }
 ```
 
