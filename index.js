@@ -48,6 +48,7 @@ function Swarm (opts) {
   this._tcpConnections = this._tcp && connections(this._tcp)
   this._adding = null
   this._listening = false
+  this._keepExistingConnections = (opts.keepExistingConnections === true)
 
   this._peersIds = {}
   this._peersSeen = {}
@@ -415,6 +416,12 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     var oldWrap = self._peersIds[remoteIdHex]
     var old = oldWrap && oldWrap.connection
     var oldType = oldWrap && oldWrap.info.type
+
+    if (old && self._keepExistingConnections) {
+      self.emit('redundant-connection', connection, info)
+      connection.destroy()
+      return
+    }
 
     if (old) {
       debug('duplicate connections detected in handshake, dropping one')
