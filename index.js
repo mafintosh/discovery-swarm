@@ -348,6 +348,17 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
 
   connection.on('close', onclose)
 
+  if (!info.host === null) {
+    if (connection.remoteAddress) {
+      info.host = connection.remoteHost
+      info.port = connection.remotePort
+    } else if (typeof connection.address === 'function') {
+      var addr = connection.address()
+      info.host = addr.address
+      info.port = addr.port
+    }
+  }
+
   if (this._stream) {
     var wire = connection
     connection = this._stream(info)
