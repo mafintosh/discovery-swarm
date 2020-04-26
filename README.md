@@ -40,9 +40,21 @@ Create a new swarm. Options include:
   maxConnections: 0, // max number of connections.
   whitelist: [], // array of ip addresses to restrict connections to
   keepExistingConnections: false  // by default, prefer tcp by dropping old utp connections
+  dns: // default undefined, if false will disable dns discovery
+  {
+    server: 'discovery.example.com:9090', // put a centralized dns discovery server here,
+    domain: 'my-domain.com', // top-level domain to use for records. defaults to dns-discovery.local,
+    multicast: true // use multicast-dns. defaults to true.
+  },
+  dht: // default undefined, if false will disable dht discovery
+  {
+      bootstrap: [], // bootstrap servers
+      host: false, // host of local peer, if specified then announces get added to local table (String, disabled by default)
+  }
 }
 ```
-
+For full list of `dns` options, take a look at [dns-discovery](https://github.com/mafintosh/dns-discovery)
+For full list of `dht` options, take a look at [bittorrent-dht](https://github.com/webtorrent/bittorrent-dht)
 For full list of `opts` take a look at [discovery-channel](https://github.com/maxogden/discovery-channel)
 
 #### `sw.join(key, [opts], [cb])`
