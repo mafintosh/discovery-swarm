@@ -407,7 +407,7 @@ Swarm.prototype._onconnection = function (connection, type, peer) {
     if (idHex === remoteIdHex) {
       if (peer) {
         self._peersSeen[peer.id] = PEER_BANNED
-        self.emit('peer-banned', { peer: peer, reason: 'detected-self' })
+        self.emit('peer-banned', peer, { reason: 'detected-self' })
       }
       connection.destroy()
       return
